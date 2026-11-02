@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 7
+revision: 8
 created: 2026-11-02T15:27
-updated: 2026-11-02T16:24
+updated: 2026-11-02T16:31
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 2 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 3 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -44,7 +44,7 @@ register: —
 
 | Gate | MANIFEST | When | Decision | By | Date | Rationale / accepted items |
 | --- | --- | --- | --- | --- | --- | --- |
-| PM review | Phase 4 | after concept §3–§10, before architecture | pending | | | sponsor decisions applied to concept rev 2 (NF-VLT-4, U-VLT-3 dropped; F-VLT-14 optional) — requirements not yet approved |
+| PM review | Phase 4 | after concept §3–§10, before architecture | pending | | | sponsor decisions applied (NF-VLT-4, U-VLT-3 dropped; F-VLT-14 optional); team feedback applied in rev 3 (NF-VLT-21 reference data set) — requirements not yet approved |
 | Consistency review | Phase 6 | after architecture, before synthesis | pending | | | |
 | Gap analysis | Phase 9 | after the last slice | pending | | | |
 
@@ -65,10 +65,11 @@ register: —
 | 16:16 | VLT | concept | — | sponsor decisions applied (concept rev 2): NF-VLT-4, U-VLT-3 dropped; F-VLT-14 optional. Logged as approval in error — corrected 16:20 |
 | 16:20 | VLT | concept | stop | PM review still pending; requirements not approved; no architecture started; nothing of the concept committed |
 | 16:24 | VLT | concept | wip_commit | user request: commit the requirements draft (concept rev 2, status in_progress) as work in progress for team discussion — a deliberate exception to RULES §6 (commits mark frozen states); on resume: ask the PM review question first |
+| 16:31 | VLT | concept | — | team feedback applied (concept rev 3): NF-VLT-21 reference data set added; acceptance of F-VLT-1, 2, 3, 4, 6, 7, NF-VLT-11, NF-VLT-17 rewritten against it; still PM review pending; wip commit on user request |
 
 ## Open items for the Director
 
-- PM review pending for VLT (concept rev 2) — sponsor has not approved the requirements yet. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
+- PM review pending for VLT (concept rev 3) — sponsor has not approved the requirements yet. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
 - OQ-1 (camera model) is critical for NF-VLT-18 (30 ms deadline).
 
 ## Notes (human)

@@ -2,9 +2,9 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 2
+revision: 3
 created: 2026-11-02T15:28
-updated: 2026-11-02T16:12
+updated: 2026-11-02T16:31
 input: VLT/10-intake.md@2
 ---
 
@@ -33,6 +33,7 @@ _The project's shared domain dictionary. Developers and agents use these terms â
 | safe state | laser off; targets ignored until re-armed | `SAFE` | VLT | active |
 | degraded | tracking with exactly two camera nodes delivering the ball | `DEGRADED` | VLT | active |
 | camera calibration / galvo calibration | stored results of the manual calibration procedures | `camera_calibration`, `galvo_calibration` | VLT | active |
+| reference data set | recorded, annotated frames of all cameras that the automated tests run against | `reference_data` | VLT | active |
 | monitoring laptop | observe-only sink for monitoring data | `monitor` | VLT | active |
 | kill switch | physical switch cutting the laser supply independent of software | â€” | VLT | active |
 

@@ -2,10 +2,10 @@
 stage: concept
 owner: build-concept
 status: in_progress
-revision: 2
+revision: 3
 version: 0.1
 created: 2026-11-02T16:10
-updated: 2026-11-02T16:16
+updated: 2026-11-02T16:31
 input: VLT/10-intake.md@2
 feature: VLT
 ---
@@ -51,6 +51,7 @@ Full dictionary in `CONTEXT.md`. Delta introduced by this feature:
 | safe state | laser off; galvo node ignores targets until re-armed | `SAFE` |
 | degraded | tracking with exactly two camera nodes delivering the ball | `DEGRADED` |
 | camera calibration / galvo calibration | stored results of the manual calibration procedures | `camera_calibration`, `galvo_calibration` |
+| reference data set | recorded, annotated frames of all cameras used by the automated tests (NF-VLT-21) | `reference_data` |
 | monitoring laptop | observe-only sink for monitoring data (ADR-VLT-003) | `monitor` |
 | kill switch | physical switch cutting the laser supply independent of software | — |
 
@@ -58,13 +59,13 @@ Full dictionary in `CONTEXT.md`. Delta introduced by this feature:
 
 | ID | Requirement | Acceptance (falsifiable) | Origin | Evidence |
 | --- | --- | --- | --- | --- |
-| F-VLT-1 | Each camera node detects the ball in every captured frame and sends an observation with the ball's image position (or "not seen") and the exposure time in the shared clock to the control node. | With the ball placed at 10 known positions in the cube, every camera that has the ball in view reports it within 3 px of the manually marked image position in ≥ 95 % of frames; frames without the ball report "not seen". | intake d-1 | [evidenced] |
-| F-VLT-2 | Each camera node detects the laser spot in every captured frame and includes its image position (or "not seen") in the same observation. | With the laser aimed at the resting ball, every camera that has the spot in view reports it within 3 px of the manually marked position in ≥ 95 % of frames; with the laser off it reports "not seen" in ≥ 99 % of frames. | intake d-2 | [evidenced] / thresholds [estimated] |
-| F-VLT-3 | The control node computes the ball's 3D position in cube coordinates from the observations of at least two camera nodes, using the camera calibration and combining observations by exposure time. | Ball at 10 positions measured by hand: computed position within 10 mm of the measured position with 3 cameras and within 15 mm with any 2 cameras. | intake d-3 | [evidenced] / thresholds [estimated] |
-| F-VLT-4 | The control node sends the galvo node targets for where the ball will be at the moment the spot is placed (compensating the loop delay), not where it was last measured. | Replay of a recorded swing: the predicted position for the placement time deviates ≤ 10 mm (median) from the recorded position at that time. | intake d-4 | [estimated] |
+| F-VLT-1 | Each camera node detects the ball in every captured frame and sends an observation with the ball's image position (or "not seen") and the exposure time in the shared clock to the control node. | On the reference data set (NF-VLT-21): the detected ball position lies within 3 px of the annotation in ≥ 95 % of the frames with an annotated ball; frames without the ball report "not seen". Automated test, runs without hardware; the same test run on a camera node gives identical results. | intake d-1 · team review (reference data set) | [evidenced] |
+| F-VLT-2 | Each camera node detects the laser spot in every captured frame and includes its image position (or "not seen") in the same observation. | On the reference data set (NF-VLT-21): the detected spot position lies within 3 px of the annotation in ≥ 95 % of the frames with an annotated spot; frames recorded with the laser off report "not seen" in ≥ 99 %. Automated test, runs without hardware; the same test run on a camera node gives identical results. | intake d-2 · team review (reference data set) | [evidenced] / thresholds [estimated] |
+| F-VLT-3 | The control node computes the ball's 3D position in cube coordinates from the observations of at least two camera nodes, using the camera calibration and combining observations by exposure time. | On the reference data set (NF-VLT-21): for the resting positions, the computed 3D position lies within 10 mm of the hand-measured position with 3 cameras and within 15 mm with any 2 cameras. Automated test, runs without hardware. | intake d-3 · team review (reference data set) | [evidenced] / thresholds [estimated] |
+| F-VLT-4 | The control node sends the galvo node targets for where the ball will be at the moment the spot is placed (compensating the loop delay), not where it was last measured. | Replay of the recorded swings of the reference data set (NF-VLT-21): the predicted position for the placement time deviates ≤ 10 mm (median) from the recorded position at that time. | intake d-4 | [estimated] |
 | F-VLT-5 | The galvo node converts each target into mirror angles using the galvo calibration and drives the galvo accordingly. | Laser aimed at 9 known cube points (grid): spot lands within 5 mm of each point. | intake d-5 | [evidenced] / threshold [estimated] |
-| F-VLT-6 | The control node computes the aiming error for every fusion step in which the spot is seen by at least one camera. | With the spot placed at a known offset (0, 20, 40 mm) from the resting ball, the computed aiming error is within 5 mm of the offset. | intake d-6 | [evidenced] / threshold [estimated] |
-| F-VLT-7 | The control node detects a run — start when the amplitude first rises above 100 mm, end when it falls below 50 mm — counts hits (spot seen and within 25 mm of the ball centre) and fusion steps, and reports the hit rate at the end of the run. A step in which no camera sees the spot counts as a miss. | Replay of a recorded run with known spot/ball positions: start and end detected within one swing period of the true moment; reported hit rate equals the hand count ± 1 %. | intake d-7 | [evidenced] |
+| F-VLT-6 | The control node computes the aiming error for every fusion step in which the spot is seen by at least one camera. | On the reference data set (NF-VLT-21): the computed aiming error lies within 5 mm of the aiming error derived from the annotations (spot and ball positions). | intake d-6 · team review (reference data set) | [evidenced] / threshold [estimated] |
+| F-VLT-7 | The control node detects a run — start when the amplitude first rises above 100 mm, end when it falls below 50 mm — counts hits (spot seen and within 25 mm of the ball centre) and fusion steps, and reports the hit rate at the end of the run. A step in which no camera sees the spot counts as a miss. | Replay of a recorded run of the reference data set (NF-VLT-21) with annotated spot and ball positions: start and end detected within one swing period of the true moment; reported hit rate equals the hand count ± 1 %. | intake d-7 | [evidenced] |
 | F-VLT-8 | The laser is off at start-up, during the restart of any node, whenever the system is not armed and whenever no valid ball state is available. | Power-up, node restarts and covering the ball: a photodiode (or camera) at the galvo output shows the laser off within 100 ms in every case. | intake d-10 | [evidenced] |
 | F-VLT-9 | The galvo node clamps every aim to the cube volume, regardless of the target it receives. | Targets outside the cube (incl. NaN, ±∞, far out of range) sent to the galvo node: the commanded mirror angles never leave the cube's angle envelope; NaN/∞ targets switch the laser off. | intake d-11 | [evidenced] |
 | F-VLT-10 | The galvo node switches the laser off when it has not received a fresh target for 100 ms. | Stop the control node or unplug its cable while tracking: laser off ≤ 100 ms + 10 ms after the last target. | intake d-12 | [evidenced] / value [estimated] |
@@ -102,16 +103,17 @@ Full dictionary in `CONTEXT.md`. Delta introduced by this feature:
 | NF-VLT-8 | Monitoring traffic of all nodes together stays ≤ 20 Mbit/s; camera images are sent at ≤ 5 per second, ≤ 320 × 240 px. | Switch/port counters or capture over a 10-min run: total monitoring traffic ≤ 20 Mbit/s. | intake d-21 | [estimated], confirmed by sponsor |
 | NF-VLT-9 | Loop timing (NF-VLT-18) and the demo acceptance (NF-VLT-1) are verified both with monitoring on (at its maximum rate) and off. | Both measurements recorded in the test report. | intake d-22 | [evidenced] |
 | NF-VLT-10 | The monitoring laptop has observe-only access: no node accepts commands over the network. | Port scan of every node: no listening port accepts commands; only outgoing monitoring connections and the loop's own messages. | intake d-23, ADR-VLT-003 | [evidenced] |
-| NF-VLT-11 | Camera images are shown live only and are not stored by default (GDPR). | After a run, no image files on any node or on the laptop unless storage was explicitly enabled in the configuration. | intake d-28 | [evidenced] |
+| NF-VLT-11 | Camera images are shown live only and are not stored by default (GDPR). | After a run, no image files on any node or on the laptop unless storage was explicitly enabled in the configuration. Exception: the reference data set (NF-VLT-21). | intake d-28 | [evidenced] |
 | NF-VLT-12 | The system runs continuously for 10 minutes (several runs) without a restart. | 10-min soak: no node restart, no memory growth > 10 %, NF-VLT-1 still met in the last run. | intake d-30, sponsor | [evidenced] |
 | NF-VLT-13 | Every node can be set up reproducibly from the repository by a script; code is version-controlled, reviewed before merge, and every node's code has automated tests. | A fresh SD card set up only with the documented script runs the node; the test suite runs with one command. | intake d-31 | [evidenced] |
 | NF-VLT-14 | Product code lives under `src/` with one subfolder per node type (`src/camera/`, `src/control/`, `src/galvo/`); the monitoring server has its own subfolder. | Repository layout inspection. | intake d-32, ADR-VLT-001 | [evidenced] |
 | NF-VLT-15 | All nodes are Raspberry Pi 3 on one wired Ethernet switch. | Setup documentation lists the hardware; all tests run on it. | intake d-33, ADR-VLT-001 | [evidenced] |
 | NF-VLT-16 | The laser can be switched on and off by the galvo node in software (e.g. TTL input or switched supply). | Galvo node toggles the laser 10 × per second for 10 s; photodiode confirms every transition. (open: OQ-2) | intake d-34 | [evidenced] |
-| NF-VLT-17 | Laser colour, ball colour and background are chosen so that the spot is distinguishable on the ball and the ball against the background for every camera. | Static test: ball detected per F-VLT-1 and spot on ball detected per F-VLT-2 in ≥ 95 % of frames for each camera. (open: OQ-2, OQ-7) | intake d-35 | [evidenced] / threshold [estimated] |
+| NF-VLT-17 | Laser colour, ball colour and background are chosen so that the spot is distinguishable on the ball and the ball against the background for every camera. | Proven by F-VLT-1 and F-VLT-2 passing on the reference data set (NF-VLT-21), evaluated separately for each camera. (open: OQ-2, OQ-7) | intake d-35 · team review (reference data set) | [evidenced] / threshold [estimated] |
 | NF-VLT-18 | End-to-end deadline: from the exposure of a frame to the spot being placed at the corresponding target ≤ 30 ms, with a budget per stage (capture/readout, detection, transmission, fusion and prediction, transmission, galvo output, mirror settling) defined in the architecture. | Per-stage timestamps logged over a 10-min run: 99th percentile of the end-to-end time ≤ 30 ms; each stage within its budget. | intake d-37, sponsor | [evidenced] |
 | NF-VLT-19 | Each node stays within ≤ 75 % average CPU and ≤ 50 % RAM on the Pi 3 during a run. | Resource log during a 10-min run. | intake d-40 | [estimated], confirmed by sponsor |
 | NF-VLT-20 | Clock precision (NF-VLT-5) holds with monitoring traffic at its maximum (NF-VLT-8). | Clock offsets ≤ 1 ms during a run with monitoring at maximum rate. | concept §9 (PTP vs. monitoring on one switch) | [estimated] |
+| NF-VLT-21 | A reference data set is recorded once with the final setup: time-synchronized frames of all three cameras covering a resting ball at ≥ 10 positions spread over the cube, swinging runs (release until amplitude < 50 mm), the spot on and off the ball, laser off, and frames without the ball. Every frame is annotated with the image positions of ball and spot; for the resting positions the 3D ball position is measured by hand. The set and its annotations are stored in the repository and are the input of the automated detection, triangulation, aiming-error, prediction and run tests. It is an explicit exception to NF-VLT-11 on the condition that no people appear in the frames. After a significant setup change (camera, background, ball, laser or lighting) the set is recorded again. | The data set exists in the repository with an annotation file that passes a schema check, covers every listed case for all three cameras, and contains no people (reviewed). | team review (feedback on F-VLT-1 … F-VLT-3) | [evidenced] |
 
 ### Load and growth model
 
@@ -171,6 +173,7 @@ Fixed running cost only — no usage-dependent drivers (hardware bought once; no
 | — | End-to-end deadline | 30 ms (sponsor) | → NF-VLT-18 |
 | — | Continuous operation | 10 min (sponsor) | → NF-VLT-12 |
 | — | Numeric defaults (laser timeout 100 ms, monitoring ≤ 20 Mbit/s, CPU ≤ 75 % / RAM ≤ 50 %, run start > 100 mm) | Accepted by the sponsor | → F-VLT-7, F-VLT-10, NF-VLT-8, NF-VLT-19 |
+| — | How to verify detection and triangulation without hand-placed checks every time | Recorded, annotated reference data set; automated tests against it (team review) | → NF-VLT-21, F-VLT-1 … F-VLT-4, F-VLT-6, F-VLT-7, NF-VLT-17 |
 | — | PM review: hardware watchdog, recalibration hint, redundant control node | NF-VLT-4 and U-VLT-3 dropped; F-VLT-14 optional (nice to have) | → §7, F-VLT-14 |
 
 ### Open questions
@@ -251,6 +254,13 @@ All distances in mm (cube coordinates), times in ns of the shared PTP clock (`in
 | `monitor_image_rate_hz` | `float` | 5 | 0–5 |
 | `monitor_image_size` | `{w, h}` | 320 × 240 | ≤ 320 × 240 |
 | `store_images` | `bool` | false | — |
+
+**Reference data set** (NF-VLT-21) — one folder in the repository
+
+- frames per camera as lossless images, named by `camera_id` and `frame_seq`, with `t_exposure_ns`;
+- `annotations` file: per frame `camera_id`, `frame_seq`, `t_exposure_ns`, `ball` `{u, v, radius_px}` or `null`, `spot` `{u, v}` or `null`, `laser_on` `bool`, `case` (`resting`, `swing`, `no_ball`, `laser_off`); per resting position `position_mm` `{x, y, z}` measured by hand; per swing the run boundaries;
+- the camera calibration used during recording;
+- recording date and setup description (camera model, ball, background, laser, lighting).
 
 **Calibration files**
 
