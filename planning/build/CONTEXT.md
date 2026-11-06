@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 3
+revision: 4
 created: 2026-11-02T15:28
-updated: 2026-11-02T16:31
-input: VLT/10-intake.md@2
+updated: 2026-11-06T15:24
+input: VLT/10-intake.md@2, VLT/20-concept.md@4
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -24,10 +24,10 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | observation | one camera's result for one frame: ball and spot image positions plus exposure time | `Observation` | VLT | active |
 | ball state | fused 3D ball position (and velocity) at a time | `BallState` | VLT | active |
 | target | cube point the galvo node shall aim at, with placement time and laser flag | `Target` | VLT | active |
-| aiming error | distance between measured spot and measured ball centre | `aiming_error_mm` | VLT | active |
+| aiming error | currently described as distance between measured spot and measured ball centre; metric and single-camera validity remain open in OQ-9 of the concept | `aiming_error_mm` | VLT | active — definition pending |
 | hit | fusion step with the spot seen and within the hit radius (25 mm) of the ball centre | `hit` | VLT | active |
 | run | from release (amplitude > 100 mm) until amplitude < 50 mm | `Run` | VLT | active |
-| hit rate | hits ÷ fusion steps within a run | `hit_rate` | VLT | active |
+| hit rate | currently hits ÷ fusion steps within a run; time weighting and treatment of tracking gaps remain open in OQ-10 of the concept | `hit_rate` | VLT | active — evaluation rule pending |
 | amplitude | maximum horizontal deflection from rest over the last swing | `amplitude_mm` | VLT | active |
 | armed | state in which the system may switch the laser on | `armed` | VLT | active |
 | safe state | laser off; targets ignored until re-armed | `SAFE` | VLT | active |
@@ -36,6 +36,8 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | reference data set | recorded, annotated frames of all cameras that the automated tests run against | `reference_data` | VLT | active |
 | monitoring laptop | observe-only sink for monitoring data | `monitor` | VLT | active |
 | kill switch | physical switch cutting the laser supply independent of software | — | VLT | active |
+| restart session | one sender-process incarnation; sequence numbers are interpreted within it, preventing pre-restart messages from becoming current again (F-VLT-23) | `session_id` | VLT | proposed — PM review pending |
+| setup revision | identity of the installation configuration and calibration set that communicating nodes must agree on (F-VLT-24) | `setup_revision` | VLT | proposed — PM review pending |
 
 ## Naming rules
 
