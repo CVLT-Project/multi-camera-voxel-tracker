@@ -1,6 +1,6 @@
 # ADR-VLT-004 — Manual calibration in v1
 
-- **Status:** accepted · 2026-11-02 · decided by the sponsor during intake (grilling #19)
+- **Status:** superseded by ADR-VLT-012 (2026-11-10) · was accepted 2026-11-02 · decided by the sponsor during intake (grilling #19)
 - **Feature:** VLT
 
 ## Context

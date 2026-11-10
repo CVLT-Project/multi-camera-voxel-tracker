@@ -2,7 +2,7 @@
 stage: control
 owner: build
 status: in_progress
-revision: 11
+revision: 13
 created: 2026-11-02T15:27
 updated: 2026-11-10T00:00
 input: problem statement (chat)
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 6 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 8 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -69,10 +69,12 @@ register: —
 | 2026-11-06 15:24 | VLT | concept | requirements review | user requested only useful additions/clarifications: proposed F-VLT-22 … F-VLT-24, NF-VLT-22; metric/release acceptance gaps exposed, OQ-9 … OQ-14 added; ≈ 90 fps reclassified as an unverified estimate; concept rev 4 and shared vocabulary updated; PM review pending, no architecture or commit |
 | 2026-11-10 | VLT | concept | requirements review | user requested a DRS completeness and consistency check: proposed F-VLT-25 … F-VLT-29, NF-VLT-23 … NF-VLT-29; corrected F-VLT-8 (camera restart), F-VLT-16 (action delay), F-VLT-18/20 + `clock_sync_limit_ms` (pairwise π); sharpened F-VLT-1/4/11/15, U-VLT-1; exposed hit-rule degeneracy (OQ-9), F-VLT-14 vs. re-arm (OQ-8), calibration vs. F-VLT-8 (OQ-13); added OQ-15/16 and a DRS coverage table (§9); concept rev 5, CONTEXT rev 5; PM review pending, no commit |
 | 2026-11-10 | VLT | concept | sponsor decisions | OQ-6/8/9/10/11/15/16/17 decided, OQ-12 (deadline classes) and OQ-14 (every camera pair ≥ 80 %) partly; ADR-VLT-005 … 011; F-VLT-14 deferred; F-VLT-30, NF-VLT-30 added; F-VLT-27 without pendulum model; OQ-13 kept for team discussion; concept rev 6, CONTEXT rev 6; PM review pending, no commit |
+| 2026-11-10 | VLT | concept | sponsor decision | automatic calibration (ADR-VLT-012 supersedes ADR-VLT-004): cameras incl. lens from frame markers at every start + continuous pose check; galvo scan on demand with button held; 3-point check at arming (F-VLT-31); background stays with OQ-7; OQ-13 reduced to conventions and marker map; concept rev 7, CONTEXT rev 7 |
+| 2026-11-10 | VLT | concept | sponsor decision | OQ-13 resolved: cube frame and rest position in §2, annotation pixel coordinates in NF-VLT-21, design details to the architecture; proposed U-VLT-4 (health overview incl. clock counters), U-VLT-5, F-VLT-32, F-VLT-33, NF-VLT-31 for integration and debugging; concept rev 8, CONTEXT rev 8; wip commit on user request |
 
 ## Open items for the Director
 
-- PM review pending for VLT (concept rev 6) — rev 6 applies the sponsor's answers (ADR-VLT-005 … 011); open: OQ-1 … OQ-5, OQ-7, OQ-12 (numeric limits), OQ-13 (team discussion), OQ-14 (envelope, error budget). rev 5 added the DRS completeness review: 12 proposed requirements, 4 in-place corrections, OQ-15/16; 16 open questions in total. Earlier note for rev 4: — sponsor has not approved the requirements yet. Four proposed requirements and six new clarification topics are ready for team discussion; 14 open questions in total. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
+- PM review pending for VLT (concept rev 8) — sponsor answers in ADR-VLT-005 … 012; open: OQ-1 … OQ-5, OQ-7, OQ-12 (numeric limits), OQ-14 (envelope, error budget). rev 8 adds proposed debugging requirements (U-VLT-4/5, F-VLT-32/33, NF-VLT-31). rev 5 added the DRS completeness review: 12 proposed requirements, 4 in-place corrections, OQ-15/16; 16 open questions in total. Earlier note for rev 4: — sponsor has not approved the requirements yet. Four proposed requirements and six new clarification topics are ready for team discussion; 14 open questions in total. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
 - OQ-1 (camera model) is critical for NF-VLT-18 (30 ms deadline).
 - Discuss OQ-9/OQ-10 first (measurable aiming error and unbiased run scoring), then OQ-11/OQ-12 (recovery and temporal validity); OQ-13/OQ-14 cover calibration conventions and the acceptance envelope. These are unresolved decisions, not new approved scope.
 
