@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 4
+revision: 6
 created: 2026-11-02T15:28
-updated: 2026-11-06T15:24
-input: VLT/10-intake.md@2, VLT/20-concept.md@4
+updated: 2026-11-10T00:00
+input: VLT/10-intake.md@2, VLT/20-concept.md@6
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -24,10 +24,10 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | observation | one camera's result for one frame: ball and spot image positions plus exposure time | `Observation` | VLT | active |
 | ball state | fused 3D ball position (and velocity) at a time | `BallState` | VLT | active |
 | target | cube point the galvo node shall aim at, with placement time and laser flag | `Target` | VLT | active |
-| aiming error | currently described as distance between measured spot and measured ball centre; metric and single-camera validity remain open in OQ-9 of the concept | `aiming_error_mm` | VLT | active — definition pending |
-| hit | fusion step with the spot seen and within the hit radius (25 mm) of the ball centre | `hit` | VLT | active |
-| run | from release (amplitude > 100 mm) until amplitude < 50 mm | `Run` | VLT | active |
-| hit rate | currently hits ÷ fusion steps within a run; time weighting and treatment of tracking gaps remain open in OQ-10 of the concept | `hit_rate` | VLT | active — evaluation rule pending |
+| aiming error | distance in mm from the fused ball centre to the laser beam line (galvo origin → spot in 3D); unmeasurable when the spot cannot be placed in 3D (ADR-VLT-005) | `aiming_error_mm` | VLT | active |
+| hit | fusion slot in which, in at least one camera that sees both, the spot lies inside the ball's image disc (ADR-VLT-005) | `hit` | VLT | active |
+| run | from release (ball displaced > 100 mm starts moving) until amplitude < 50 mm; aborted when the safe state ends it (ADR-VLT-006) | `Run` | VLT | active |
+| hit rate | time with a hit ÷ run duration; gaps count as misses (ADR-VLT-006) | `hit_rate` | VLT | active |
 | amplitude | maximum horizontal deflection from rest over the last swing | `amplitude_mm` | VLT | active |
 | armed | state in which the system may switch the laser on | `armed` | VLT | active |
 | safe state | laser off; targets ignored until re-armed | `SAFE` | VLT | active |
@@ -38,6 +38,15 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | kill switch | physical switch cutting the laser supply independent of software | — | VLT | active |
 | restart session | one sender-process incarnation; sequence numbers are interpreted within it, preventing pre-restart messages from becoming current again (F-VLT-23) | `session_id` | VLT | proposed — PM review pending |
 | setup revision | identity of the installation configuration and calibration set that communicating nodes must agree on (F-VLT-24) | `setup_revision` | VLT | proposed — PM review pending |
+| galvo status | the galvo node's report to the control node: actual laser state with reason, applied target, galvo restart session (F-VLT-25) | `GalvoStatus` | VLT | proposed — PM review pending |
+| grandmaster | the node whose clock all others follow by PTP; proposed: the control node (NF-VLT-24) | `grandmaster` | VLT | proposed — PM review pending |
+| ground state | the defined state a node starts in: laser off, converter at centre, unarmed, no history (F-VLT-28) | `GROUND` | VLT | proposed — PM review pending |
+| state message | a message whose newest valid copy replaces the previous one; never queued or retransmitted (NF-VLT-27) | — | VLT | proposed — PM review pending |
+| transaction | an end-to-end real-time chain with its deadline class: T1 tracking (firm), T2 target-loss shutdown (hard), T3 unsafe-condition shutdown (hard), T4 monitoring (soft), T5 camera reintegration (no deadline) (NF-VLT-26, ADR-VLT-008) | `T1` … `T5` | VLT | active |
+| camera status | per camera: absent, unsynced, ball not seen, ball seen (F-VLT-11) | `CameraStatus` | VLT | active |
+| fusion slot | one period of the fixed-rate fusion, aligned to the shared clock (ADR-VLT-009) | `FusionSlot` | VLT | active |
+| arming epoch | counter incremented at every arming; after a safety fault the galvo node needs a newer one (ADR-VLT-007) | `arm_epoch` | VLT | active |
+| hit radius | obsolete 2026-11-10 — replaced by the ball's image disc (ADR-VLT-005) | `hit_radius_mm` | VLT | obsolete |
 
 ## Naming rules
 
