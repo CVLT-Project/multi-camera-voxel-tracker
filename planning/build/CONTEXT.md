@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 12
+revision: 13
 created: 2026-11-02T15:28
 updated: 2026-11-10T00:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@13
+input: VLT/10-intake.md@2, VLT/20-concept.md@14
 ---
 
 # CONTEXT â€” Ubiquitous Language
@@ -20,7 +20,7 @@ _The project's shared domain dictionary. Developers and agents use these terms â
 | camera node | Pi 3 with one camera; detects ball and spot, sends observations | `camera` | VLT | active |
 | control node | Pi 3 that fuses observations, predicts, computes targets, aiming error and hit rate; decides arming, disarming, galvo scan and arming check in software (ADR-VLT-013; the arming button was removed 2026-11-10) | `control` | VLT | active |
 | galvo node | Pi 3 that turns targets into mirror angles, drives the converter board, switches the laser | `galvo` | VLT | active |
-| converter board | hardware between galvo node and galvo driver producing the analog X/Y signals | `converter` | VLT | active |
+| converter board | hardware between galvo node and galvo driver producing the analog X/Y signals: a PCM5102A I2S stereo DAC (ADR-VLT-015) | `converter` | VLT | active |
 | observation | one camera's result for one frame: ball and spot image positions plus exposure time | `Observation` | VLT | active |
 | ball state | fused 3D ball position (and velocity) at a time | `BallState` | VLT | active |
 | target | cube point the galvo node shall aim at, with placement time and laser flag | `Target` | VLT | active |

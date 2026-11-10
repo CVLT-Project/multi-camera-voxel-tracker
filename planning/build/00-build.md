@@ -2,7 +2,7 @@
 stage: control
 owner: build
 status: in_progress
-revision: 18
+revision: 20
 created: 2026-11-02T15:27
 updated: 2026-11-10T00:00
 input: problem statement (chat)
@@ -76,6 +76,8 @@ register: —
 | 2026-11-10 | VLT | concept | sponsor decision | review gap G2 resolved: monitoring laptop required to operate, no local indicators; U-VLT-7 added (state on connect, stale nodes, diagnostics logged locally), F-VLT-29 log contents extended; concept rev 11, CONTEXT rev 11 |
 | 2026-11-10 | VLT | concept | sponsor decision | review gap G3 resolved: key-only SSH for administration, separate from control of the loop, which has no command interface; config changes take effect at restart (ADR-VLT-014, amends ADR-VLT-003); NF-VLT-10 rewritten, NF-VLT-28 adjusted; concept rev 12; wip commit on user request |
 | 2026-11-10 | VLT | concept | Gate 1 preparation | checked against the report requirements and the lecture checklist [L] p. 287–288: design moved from §3–§5 to §10 (p. 287 rule); reason and lecture page per requirement; U-VLT-1 … 7 → F-VLT-34 … 40; G4 → NF-VLT-32, G5 → F-VLT-7/1; new F-VLT-41 (modes), NF-VLT-33 (timing of actions), NF-VLT-34 (reaction matrix, coverage); values for F-VLT-26/27/28; OQ owners as sub-team roles; lecture checklist table in §9; concept rev 13, CONTEXT rev 12 |
+| 2026-11-10 | VLT | concept | hardware decision | galvo set (AliExpress), PCM5102A I2S DAC, Laserfuchs 650 nm 1 mW Class 2 laser (ADR-VLT-015); OQ-2, OQ-5 resolved; link faults detected by effect monitoring (team choice, ≈ 600 ms); F-VLT-15, NF-VLT-16 rewritten; galvo specs still open (OQ-4); concept rev 14, CONTEXT rev 13 |
+| 2026-11-10 | VLT | concept | hardware data | galvo specs from the listing (±5 V, 0.33 V/°, ±15°/±30° optical, ≤ 0.5 ms step, ±12 V) added to ADR-VLT-015 and §6; NF-VLT-32 requires the cube within the usable scan angle; F-VLT-19 conditional; OQ-4 narrowed (wiring, supply, pattern board, level matching); concept rev 15 |
 
 ## Open items for the Director
 
