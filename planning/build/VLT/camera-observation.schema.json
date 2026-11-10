@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VLT camera Observation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type",
+    "schema_version",
+    "profile_id",
+    "camera_id",
+    "session_id",
+    "frame_seq",
+    "setup_revision",
+    "calibration_id",
+    "t_exposure_ns",
+    "t_ball_sample_ns",
+    "t_spot_sample_ns",
+    "exposure_us",
+    "analogue_gain",
+    "ball",
+    "spot",
+    "clock_offset_ns",
+    "synced"
+  ],
+  "properties": {
+    "type": {
+      "const": "Observation"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "profile_id": {
+      "const": "VLT-CAM-1"
+    },
+    "camera_id": {
+      "enum": [
+        0,
+        1,
+        2
+      ]
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "frame_seq": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "setup_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "calibration_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "t_exposure_ns": {
+      "$ref": "#/$defs/time"
+    },
+    "t_ball_sample_ns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "t_spot_sample_ns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "clock_offset_ns": {
+      "$ref": "#/$defs/time"
+    },
+    "exposure_us": {
+      "type": "integer",
+      "minimum": 250,
+      "maximum": 2000
+    },
+    "analogue_gain": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 8
+    },
+    "synced": {
+      "type": "boolean"
+    },
+    "ball": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "u",
+            "v",
+            "radius_px"
+          ],
+          "properties": {
+            "u": {
+              "$ref": "#/$defs/u"
+            },
+            "v": {
+              "$ref": "#/$defs/v"
+            },
+            "radius_px": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 320
+            }
+          }
+        }
+      ]
+    },
+    "spot": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "u",
+            "v"
+          ],
+          "properties": {
+            "u": {
+              "$ref": "#/$defs/u"
+            },
+            "v": {
+              "$ref": "#/$defs/v"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "time": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,18})$"
+    },
+    "u": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 639
+    },
+    "v": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 479
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "ball": {
+            "type": "null"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "t_ball_sample_ns": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "t_ball_sample_ns": {
+            "$ref": "#/$defs/time"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spot": {
+            "type": "null"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "t_spot_sample_ns": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "t_spot_sample_ns": {
+            "$ref": "#/$defs/time"
+          }
+        }
+      }
+    }
+  ]
+}

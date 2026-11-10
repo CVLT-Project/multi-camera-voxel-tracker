@@ -25,3 +25,5 @@ A fixed period makes scoring, load and phase analysable; aiming at the placement
 ## Traces to
 
 F-VLT-3, F-VLT-4, F-VLT-5, F-VLT-7, F-VLT-22, NF-VLT-18, NF-VLT-27
+
+**Profile follow-up (ADR-VLT-021):** fusion_period_ms is now 10, placement is requested 5 ms after the slot, source-use horizon is 30 ms, and expiry is min(t_place + 1 ms, source + 30 ms), exclusive. Camera capture is the selected 80–120 fps profile with timestamp alignment. Earlier wording that the period value was open is superseded.

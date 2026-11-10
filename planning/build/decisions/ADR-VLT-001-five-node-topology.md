@@ -32,3 +32,5 @@ Separating galvo output from control keeps the safety-relevant actuator logic (c
 NF-VLT-14, NF-VLT-15, F-VLT-3, F-VLT-5, F-VLT-15
 
 **Amended 2026-11-10 by ADR-VLT-013:** there is no arming button; arming, disarming, galvo scan and arming check are decided by the control node software, and the kill switch is the only physical control.
+
+**Camera-profile clarification (ADR-VLT-020, user confirmation):** the five Raspberry Pi 3 boards remain fixed. The two side views are elevated, plus an offset overhead view; the camera model alone remains open under a selected capture/timing profile. The earlier statement that a galvo hang is covered only by the kill switch is superseded by the on-chip watchdog in ADR-VLT-010/018; the external watchdog remains deferred.

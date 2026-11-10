@@ -1,6 +1,6 @@
 # ADR-VLT-007 — One recovery policy: safety faults need re-arming, transient ball loss does not
 
-- **Status:** accepted · 2026-11-10 · decided by the sponsor (OQ-11) · amended by ADR-VLT-013
+- **Status:** accepted · 2026-11-10 · decided by the sponsor (OQ-11) · amended by ADR-VLT-013 and ADR-VLT-019
 - **Feature:** VLT
 
 ## Context
@@ -14,6 +14,8 @@ F-VLT-8, F-VLT-11, F-VLT-17 and F-VLT-21 gave different answers on when the lase
 - **Kill switch feedback:** the kill switch gets a sense contact read by the galvo node on a GPIO pin and reported in `GalvoStatus`.
 - **Arming epoch:** every arming increments `arm_epoch`, carried in each `Target`. After a safety fault the galvo node switches the laser on only for targets with a higher `arm_epoch` than at the fault, so a lost status message cannot bypass re-arming.
 - **`auto` mode** (since ADR-VLT-013 the only mode)**:** re-arms after a safety fault only when the fault has cleared and the arming condition (≥ 2 cameras see the ball) has held continuously for a configured hold-off (default 2 s).
+
+**Amendment (ADR-VLT-019, user-requested correction):** F-VLT-42 observation timeout during Tracking is an alarm and latches Safe until kill-switch press/release. In Calibrating galvo or Arming check, observation timeout instead switches off and fails that attempt/check under F-VLT-13/31, without alone setting the tracking-alarm latch. A converter link fault is detected only through a qualifying observable effect; see ADR-VLT-018.
 
 ## Rationale
 

@@ -25,6 +25,8 @@ Repeated setup tests need calibration in seconds, not a manual session. The spot
 - The automatic galvo scan depends on the spot being visible on floor and walls; the background choice (OQ-7) must allow it.
 - The marker map (marker IDs and cube coordinates) becomes a setup file under F-VLT-24; the conventions themselves remain OQ-13.
 
+**Startup/observation clarification (ADR-VLT-017/019):** Start is a laser-off preparation phase; any needed galvo scan is a separate mode with its own ≤ 60 s attempt budget including laser-off/transition. Calibration observation loss follows F-VLT-42 (500 ms watchdog + ≤ 100 ms off): fail the scan/check and apply its bounded retry policy. A valid ball state is not required to triangulate calibration spots. The former unconditional "laser off throughout startup" wording is limited to boot/Start, not the explicit scan/check modes.
+
 ## Traces to
 
 F-VLT-3, F-VLT-5, F-VLT-8, F-VLT-12, F-VLT-13, F-VLT-24, F-VLT-31, F-VLT-35, OQ-7, OQ-13

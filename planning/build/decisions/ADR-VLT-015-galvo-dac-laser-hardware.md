@@ -1,6 +1,6 @@
 # ADR-VLT-015 — Galvo, DAC and laser hardware; converter link faults detected by effect monitoring
 
-- **Status:** accepted · 2026-11-10 · decided by the team (hardware selection) · resolves OQ-2 and OQ-5
+- **Status:** accepted · 2026-11-10 · decided by the team (hardware selection) · resolves OQ-2 and OQ-5 · effect-monitoring scope amended by ADR-VLT-018/019
 - **Feature:** VLT
 
 ## Context
@@ -28,16 +28,16 @@ OQ-2 (laser) and OQ-5 (converter board) were open. OQ-4 (galvo input) is still o
   - two power wires only, no modulation input;
   - collimated, 1 mrad divergence;
   - **housing at supply potential (+V)**.
-- **Converter link faults are detected by effect monitoring only.** I2S is one-way, so the DAC output can't be read back. A lost I2S clock puts the mirrors at the centre (chip mute). A broken data line freezes or corrupts the aim. Both are detected by the cameras through F-VLT-26 (aiming error > 50 mm for 500 ms → laser off, alarm, latched safe state), i.e. within ≈ 600 ms instead of 100 ms. The team accepts this. While undetected, the beam stays inside the cube and the laser is Class 2. No read-back ADC is added.
+- **Converter link faults have no electrical read-back.** Clock loss centres the mirrors; a data fault may freeze or corrupt aim. ADR-VLT-018/019 supersede the earlier blanket ≤ 600 ms detection claim: an outside-cube spot uses T3; a persistent error > 50 mm uses T6 (500 ms from qualifying exposure + ≤ 100 ms off); unavailable measurable effect uses F-VLT-42's monotonic 500 ms watchdog + ≤ 100 ms off, with mode-specific handling. Electrical fault time is logged separately. A fault producing no qualifying observable effect has no promised detection time and remains an explicit coverage limitation. No read-back ADC is added.
 
 ## Rationale
 
-The parts are cheap and available, and a Pi 3 drives I2S natively. A read-back ADC would add hardware and code for a fault that the cameras already detect, and the exposure in the meantime is limited to a Class 2 beam inside the cube.
+The parts are cheap and available, and a Pi 3 drives I2S natively. A read-back ADC would add hardware and code. The chosen effect-monitoring policy covers qualifying observable deviations and observation loss; it does not establish detection of every electrical link fault. The selected laser class and cube limits remain unchanged.
 
 ## Consequences
 
 - F-VLT-15 is rewritten: there is no separate link check. An interrupted output stream must switch the laser off within 100 ms.
-- F-VLT-21, NF-VLT-23 and the reaction matrix (NF-VLT-34) treat a converter link fault as detected by its effect within 600 ms.
+- F-VLT-21, NF-VLT-23 and the reaction matrix use the effect-specific T3/T6 origin and bound (ADR-VLT-018/019). The previous universal "converter fault detected within 600 ms" statement is superseded; unobservable faults are listed as a coverage limitation.
 - NF-VLT-16: the laser is switched through its supply (no TTL input) and mounted electrically insulated (housing at +V).
 - OQ-4 now includes level matching. The DAC's ≈ ±2.97 V covers ≈ 59 % of the galvo's ±5 V input, i.e. ≈ ±8.9° optical at the standard setting. Options: driver gain trim (up to ≈ ±17.8°), an amplifier with gain ≈ 1.7, or a larger galvo distance. NF-VLT-32 requires the cube to fit the usable angle.
 - Audio output on the Pi is streamed through a buffer. Its depth counts against the 30 ms budget (NF-VLT-18), and an empty buffer drops the output to 0 V. These are architecture topics.
@@ -45,3 +45,5 @@ The parts are cheap and available, and a Pi 3 drives I2S natively. A read-back A
 ## Traces to
 
 F-VLT-5, F-VLT-15, F-VLT-21, F-VLT-26, NF-VLT-2, NF-VLT-16, NF-VLT-18, NF-VLT-23, NF-VLT-25, NF-VLT-34, OQ-2, OQ-4, OQ-5, OQ-7
+
+**Physical-layout follow-up, 2026-11-10 (ADR-VLT-016):** the 800 mm reference cube and nominal galvo position require ≥ 14.17° usable optical half-angle including the 10 % reserve. The estimated unamplified DAC range of ±8.9° does not cover that layout. Plan full-range level matching, nominally about 1.7 gain, using verified driver adjustment or a suitable amplifier. Actual electrical design and measured range/settling remain OQ-4; original hardware specifications above are unchanged.

@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 20
+revision: 28
 created: 2026-11-02T15:27
-updated: 2026-11-10T00:00
+updated: 2026-11-10T16:29
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 9 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 21 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -44,7 +44,7 @@ register: —
 
 | Gate | MANIFEST | When | Decision | By | Date | Rationale / accepted items |
 | --- | --- | --- | --- | --- | --- | --- |
-| PM review | Phase 4 | after concept §3–§10, before architecture | pending | | | sponsor decisions applied (NF-VLT-4, U-VLT-3 dropped; F-VLT-14 optional); reference data set in rev 3; focused requirements review in rev 4 proposes F-VLT-22 … F-VLT-24, NF-VLT-22 and OQ-9 … OQ-14; DRS completeness review in rev 5 proposes F-VLT-25 … F-VLT-29, NF-VLT-23 … NF-VLT-29, OQ-15/16 and corrects F-VLT-8/16/18/20 — requirements not yet approved |
+| PM review | Phase 4 | after concept §3–§10, before architecture | pending | | | current requirements concept rev 21; Pi 3 retained by user; all camera-team profile/timing/reference choices delegated and recorded (ADR-VLT-020/021/022); camera model/driver binding, physical qualification and galvo OQ-4 remain; full Gate 1 not yet approved |
 | Consistency review | Phase 6 | after architecture, before synthesis | pending | | | |
 | Gap analysis | Phase 9 | after the last slice | pending | | | |
 
@@ -78,12 +78,19 @@ register: —
 | 2026-11-10 | VLT | concept | Gate 1 preparation | checked against the report requirements and the lecture checklist [L] p. 287–288: design moved from §3–§5 to §10 (p. 287 rule); reason and lecture page per requirement; U-VLT-1 … 7 → F-VLT-34 … 40; G4 → NF-VLT-32, G5 → F-VLT-7/1; new F-VLT-41 (modes), NF-VLT-33 (timing of actions), NF-VLT-34 (reaction matrix, coverage); values for F-VLT-26/27/28; OQ owners as sub-team roles; lecture checklist table in §9; concept rev 13, CONTEXT rev 12 |
 | 2026-11-10 | VLT | concept | hardware decision | galvo set (AliExpress), PCM5102A I2S DAC, Laserfuchs 650 nm 1 mW Class 2 laser (ADR-VLT-015); OQ-2, OQ-5 resolved; link faults detected by effect monitoring (team choice, ≈ 600 ms); F-VLT-15, NF-VLT-16 rewritten; galvo specs still open (OQ-4); concept rev 14, CONTEXT rev 13 |
 | 2026-11-10 | VLT | concept | hardware data | galvo specs from the listing (±5 V, 0.33 V/°, ±15°/±30° optical, ≤ 0.5 ms step, ±12 V) added to ADR-VLT-015 and §6; NF-VLT-32 requires the cube within the usable scan angle; F-VLT-19 conditional; OQ-4 narrowed (wiring, supply, pattern board, level matching); concept rev 15 |
+| 2026-11-10 15:02 | VLT | concept | delegated setup definition | user delegated physical installation definition, camera stays open, normal room lighting without deliberate extremes. ADR-VLT-016: 800 mm cube, white 50 mm ball, 1 m suspension, ≤ 300 mm deflection, grey panels, 18 markers, nominal camera/galvo mounts; geometry review sets overhead offset to 300 mm and cross-member width ≤ 40 mm. OQ-3 and OQ-7 choices resolved; OQ-14 envelope defined, combined error budget pending; camera/exposure/timing remain OQ-1/OQ-12, electrical range OQ-4. NF-VLT-17 clarified; concept rev 17, CONTEXT rev 15; no measurements, Gate 1 approval or commit |
+| 2026-11-10 15:23 | VLT | concept | consistency corrections | user requested resolution of three ambiguities, camera-dependent choices kept open. ADR-VLT-017: 60 s laser-off preparation, optional ≤ 60 s scans incl. off/transition, ≤ 2 attempts, Ready/Safe ≤ 180 s for first start. ADR-VLT-018: explicit T2/T3/T6/T7 origins and bounds; no blanket converter-fault detection guarantee. ADR-VLT-019, new F-VLT-42: 500 ms optical-effect watchdog + ≤ 100 ms off, tracking alarm latched, scan/check attempt fails. Requirements, reaction matrix, prior ADRs and CONTEXT aligned; concept rev 19, CONTEXT rev 17; no code, physical measurements, full Gate 1 approval or commit |
+| 2026-11-10 15:58 | VLT | concept | camera-team specification | user delegated remaining camera-team choices and confirmed Raspberry Pi 3 stays fixed; camera model remains open. ADR-VLT-020/021/022, camera-profile.json, observation schema and reference plan fix acquisition/exposure/calibration handoff, numeric time limits/budgets, combined error allocation and qualification ownership. Side camera heights/marker sizes refined for the 640 × 480 profile. Added F-VLT-43/44 and NF-VLT-35; tightened pair position/prediction allowances to close the error budget. OQ-12/14 design resolved, physical results pending; concept rev 21, CONTEXT rev 19. M2 PDF refreshed, original preserved; no code, hardware claims, full Gate 1 approval or commit |
+| 2026-11-10 16:29 | VLT | concept | pull request requested | user explicitly requested a PR for the local planning changes: WIP commit and push to a new fork branch are authorized for review, a deliberate exception to RULES §6 frozen-state commits. Requirements remain in_progress, full Gate 1 and hardware qualification remain pending. Include profile/contracts/reference plan, ADRs and regenerated report/source backup; exclude temporary PDF QA renders. |
 
 ## Open items for the Director
 
-- Gate 1 (team approval of the requirements) pending for VLT (concept rev 13); report rules and lecture checklist applied at rev 13. Earlier: PM review pending for VLT (concept rev 8) — sponsor answers in ADR-VLT-005 … 012; open: OQ-1 … OQ-5, OQ-7, OQ-12 (numeric limits), OQ-14 (envelope, error budget). rev 8 adds proposed debugging requirements (U-VLT-4/5, F-VLT-32/33, NF-VLT-31). rev 5 added the DRS completeness review: 12 proposed requirements, 4 in-place corrections, OQ-15/16; 16 open questions in total. Earlier note for rev 4: — sponsor has not approved the requirements yet. Four proposed requirements and six new clarification topics are ready for team discussion; 14 open questions in total. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
-- OQ-1 (camera model) is critical for NF-VLT-18 (30 ms deadline).
-- Discuss OQ-9/OQ-10 first (measurable aiming error and unbiased run scoring), then OQ-11/OQ-12 (recovery and temporal validity); OQ-13/OQ-14 cover calibration conventions and the acceptance envelope. These are unresolved decisions, not new approved scope.
+- Full Gate 1 remains pending for concept rev 21. Software architecture/synthesis have not started; the user delegated camera-team design choices, not full-gate approval.
+- Fixed: five Raspberry Pi 3 nodes. OQ-1 only: select the camera model and bind/qualify its concrete driver/capture/row-timing capabilities against VLT-CAM-1. Image/rate/exposure, numeric time limits, combined budget and test ownership are selected targets, not measured results.
+- Physical work still required: build/measure the setup, record/review reference data, and perform the loaded Pi 3 timing/resource/optical and independent timing qualification. Failures must be reported; do not invent achieved values.
+- OQ-4 remains outside camera-team closure: delivered galvo electrical facts, full-range level matching, measured range and settling.
+- The updated M2 report is generated from current requirement/profile/plan sources; its earlier 6 November version is retained under reports/reference/.
+- Next general software-design decision after Gate 1: node programming language and full module/slice architecture.
 
 ## Notes (human)
 

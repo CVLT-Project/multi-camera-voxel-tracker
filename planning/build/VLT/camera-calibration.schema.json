@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VLT CameraCalibration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type",
+    "schema_version",
+    "profile_id",
+    "camera_id",
+    "session_id",
+    "setup_revision",
+    "calibration_id",
+    "K",
+    "distortion",
+    "R",
+    "t_mm",
+    "reprojection_error_px",
+    "marker_count",
+    "marker_ids"
+  ],
+  "properties": {
+    "type": {
+      "const": "CameraCalibration"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "profile_id": {
+      "const": "VLT-CAM-1"
+    },
+    "camera_id": {
+      "enum": [
+        0,
+        1,
+        2
+      ]
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "setup_revision": {
+      "$ref": "#/$defs/hash"
+    },
+    "calibration_id": {
+      "$ref": "#/$defs/hash"
+    },
+    "K": {
+      "$ref": "#/$defs/nine"
+    },
+    "R": {
+      "$ref": "#/$defs/nine"
+    },
+    "t_mm": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "distortion": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "number"
+      }
+    },
+    "reprojection_error_px": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.5
+    },
+    "marker_count": {
+      "type": "integer",
+      "minimum": 8,
+      "maximum": 18
+    },
+    "marker_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 8,
+      "maxItems": 18,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 17
+      }
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nine": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "number"
+      }
+    }
+  },
+  "description": "K and R are row-major; R maps right/down/forward camera axes into cube axes; t_mm is the camera optical origin in cube coordinates. Cross-field checks: positive focal lengths, valid rotation, finite values, marker_count==len(marker_ids), at least four markers on each of two planes, matching hashes/session. UTF-8 JSON <=1400 bytes."
+}
