@@ -2,7 +2,7 @@
 stage: control
 owner: build
 status: in_progress
-revision: 13
+revision: 14
 created: 2026-11-02T15:27
 updated: 2026-11-10T00:00
 input: problem statement (chat)
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 8 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 9 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -71,6 +71,7 @@ register: —
 | 2026-11-10 | VLT | concept | sponsor decisions | OQ-6/8/9/10/11/15/16/17 decided, OQ-12 (deadline classes) and OQ-14 (every camera pair ≥ 80 %) partly; ADR-VLT-005 … 011; F-VLT-14 deferred; F-VLT-30, NF-VLT-30 added; F-VLT-27 without pendulum model; OQ-13 kept for team discussion; concept rev 6, CONTEXT rev 6; PM review pending, no commit |
 | 2026-11-10 | VLT | concept | sponsor decision | automatic calibration (ADR-VLT-012 supersedes ADR-VLT-004): cameras incl. lens from frame markers at every start + continuous pose check; galvo scan on demand with button held; 3-point check at arming (F-VLT-31); background stays with OQ-7; OQ-13 reduced to conventions and marker map; concept rev 7, CONTEXT rev 7 |
 | 2026-11-10 | VLT | concept | sponsor decision | OQ-13 resolved: cube frame and rest position in §2, annotation pixel coordinates in NF-VLT-21, design details to the architecture; proposed U-VLT-4 (health overview incl. clock counters), U-VLT-5, F-VLT-32, F-VLT-33, NF-VLT-31 for integration and debugging; concept rev 8, CONTEXT rev 8; wip commit on user request |
+| 2026-11-10 | VLT | concept | requirement added | proposed U-VLT-6 chain delay statistics (per stage and end to end, min/max/mean/jitter/percentiles, stage shares, histogram, saved per run); concept rev 9, CONTEXT rev 9 |
 
 ## Open items for the Director
 

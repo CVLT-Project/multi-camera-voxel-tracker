@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 8
+revision: 9
 created: 2026-11-02T15:28
 updated: 2026-11-10T00:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@8
+input: VLT/10-intake.md@2, VLT/20-concept.md@9
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -49,6 +49,7 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | galvo scan | the automatic galvo calibration: grid projected onto floor and walls, measured by the cameras, button held (F-VLT-13) | `galvo_scan` | VLT | active |
 | arming check | 3 projected check points measured before every arming (F-VLT-31) | `arming_check` | VLT | active |
 | health overview | the monitoring screen with per-node values, limits and highlighting (U-VLT-4) | `health` | VLT | proposed — PM review pending |
+| chain delay statistics | per-stage and end-to-end delay of the tracking chain with min, max, mean, jitter, percentiles over last second, run and session (U-VLT-6) | `ChainStats` | VLT | proposed — PM review pending |
 | session recording | bounded, image-free recording of the loop's inputs and decisions, replayable offline (F-VLT-32) | `session_recording` | VLT | proposed — PM review pending |
 | dry run | configured mode with laser disabled or galvo disabled (F-VLT-33) | `dry_run` | VLT | proposed — PM review pending |
 | fusion slot | one period of the fixed-rate fusion, aligned to the shared clock (ADR-VLT-009) | `FusionSlot` | VLT | active |
