@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 10
+revision: 11
 created: 2026-11-02T15:28
 updated: 2026-11-10T00:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@10
+input: VLT/10-intake.md@2, VLT/20-concept.md@11
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -35,7 +35,7 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | degraded | tracking with exactly two camera nodes delivering the ball | `DEGRADED` | VLT | active |
 | camera calibration / galvo calibration | stored results of the automatic calibrations: cameras from the frame markers at every start, galvo by an on-demand scan (ADR-VLT-012) | `camera_calibration`, `galvo_calibration` | VLT | active |
 | reference data set | recorded, annotated frames of all cameras that the automated tests run against | `reference_data` | VLT | active |
-| monitoring laptop | observe-only sink for monitoring data | `monitor` | VLT | active |
+| monitoring laptop | observe-only sink for monitoring data; required to operate the demo and the only status display (U-VLT-7) | `monitor` | VLT | active |
 | kill switch | physical switch cutting the laser supply independent of software; the operator's only physical control: press = disarm, release = re-arming allowed (ADR-VLT-013) | — | VLT | active |
 | restart session | one sender-process incarnation; sequence numbers are interpreted within it, preventing pre-restart messages from becoming current again (F-VLT-23) | `session_id` | VLT | proposed — PM review pending |
 | setup revision | identity of the installation configuration and calibration set that communicating nodes must agree on (F-VLT-24) | `setup_revision` | VLT | proposed — PM review pending |

@@ -2,7 +2,7 @@
 stage: control
 owner: build
 status: in_progress
-revision: 15
+revision: 17
 created: 2026-11-02T15:27
 updated: 2026-11-10T00:00
 input: problem statement (chat)
@@ -72,7 +72,9 @@ register: —
 | 2026-11-10 | VLT | concept | sponsor decision | automatic calibration (ADR-VLT-012 supersedes ADR-VLT-004): cameras incl. lens from frame markers at every start + continuous pose check; galvo scan on demand with button held; 3-point check at arming (F-VLT-31); background stays with OQ-7; OQ-13 reduced to conventions and marker map; concept rev 7, CONTEXT rev 7 |
 | 2026-11-10 | VLT | concept | sponsor decision | OQ-13 resolved: cube frame and rest position in §2, annotation pixel coordinates in NF-VLT-21, design details to the architecture; proposed U-VLT-4 (health overview incl. clock counters), U-VLT-5, F-VLT-32, F-VLT-33, NF-VLT-31 for integration and debugging; concept rev 8, CONTEXT rev 8; wip commit on user request |
 | 2026-11-10 | VLT | concept | requirement added | proposed U-VLT-6 chain delay statistics (per stage and end to end, min/max/mean/jitter/percentiles, stage shares, histogram, saved per run); concept rev 9, CONTEXT rev 9 |
-| 2026-11-10 | VLT | concept | sponsor decision | review gap G1 resolved: no arming button, the kill switch is the only physical control, arming/disarming/galvo scan/arming check decided by the control node software (ADR-VLT-013, amends ADR-VLT-001/003/007/012); U-VLT-2, F-VLT-8/11/13/21/30/31 rewritten; proposed safety latch cleared by kill-switch press and release; concept rev 10, CONTEXT rev 10; no commit |
+| 2026-11-10 | VLT | concept | sponsor decision | review gap G1 resolved: no arming button, the kill switch is the only physical control, arming/disarming/galvo scan/arming check decided by the control node software (ADR-VLT-013, amends ADR-VLT-001/003/007/012); U-VLT-2, F-VLT-8/11/13/21/30/31 rewritten; proposed safety latch cleared by kill-switch press and release; concept rev 10, CONTEXT rev 10; wip commit on user request |
+| 2026-11-10 | VLT | concept | sponsor decision | review gap G2 resolved: monitoring laptop required to operate, no local indicators; U-VLT-7 added (state on connect, stale nodes, diagnostics logged locally), F-VLT-29 log contents extended; concept rev 11, CONTEXT rev 11 |
+| 2026-11-10 | VLT | concept | sponsor decision | review gap G3 resolved: key-only SSH for administration, separate from control of the loop, which has no command interface; config changes take effect at restart (ADR-VLT-014, amends ADR-VLT-003); NF-VLT-10 rewritten, NF-VLT-28 adjusted; concept rev 12 |
 
 ## Open items for the Director
 
