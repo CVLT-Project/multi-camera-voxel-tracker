@@ -18,7 +18,7 @@ Manual calibration does not depend on spot visibility, which is itself an open r
 ## Consequences
 
 - F-VLT-12, F-VLT-13 are operator procedures with stored results.
-- A drifting setup shows up as aiming error on the display (U-VLT-1); the recalibration hint (U-VLT-3) was dropped at the PM review.
+- A drifting setup shows up as aiming error on the display (F-VLT-34); the recalibration hint (F-VLT-36) was dropped at the PM review.
 
 ## Traces to
 

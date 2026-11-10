@@ -5,7 +5,7 @@
 
 ## Context
 
-The demo needs a screen with live values and camera images (U-VLT-1). Rendering and image transfer compete with the real-time loop on Pi 3 nodes.
+The demo needs a screen with live values and camera images (F-VLT-34). Rendering and image transfer compete with the real-time loop on Pi 3 nodes.
 
 ## Decision
 
@@ -22,7 +22,7 @@ Keeps display load off the control node; keeps the laptop out of the safety desi
 
 ## Traces to
 
-U-VLT-1, NF-VLT-6, NF-VLT-7, NF-VLT-8, NF-VLT-9, NF-VLT-10
+F-VLT-34, NF-VLT-6, NF-VLT-7, NF-VLT-8, NF-VLT-9, NF-VLT-10
 
 **Amended 2026-11-10 by ADR-VLT-013:** there is no arming button; arming, disarming, galvo scan and arming check are decided by the control node software, and the kill switch is the only physical control.
 

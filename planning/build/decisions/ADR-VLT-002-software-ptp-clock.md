@@ -17,7 +17,7 @@ No extra wiring; works with any camera module; the Pi 3 Ethernet (USB-attached L
 
 ## Consequences
 
-- Precision must be measured, not assumed: offset per node is measured and shown (F-VLT-18, U-VLT-1).
+- Precision must be measured, not assumed: offset per node is measured and shown (F-VLT-18, F-VLT-34).
 - Monitoring traffic shares the switch and must not degrade sync (NF-VLT-20).
 - Before a node is synchronized, its observations are unusable (F-VLT-20).
 - Fusion must cope with cameras that expose at different moments (interpolation/selection by timestamp — architecture).

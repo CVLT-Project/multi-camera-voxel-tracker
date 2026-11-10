@@ -27,6 +27,6 @@ Repeated setup tests need calibration in seconds, not a manual session. The spot
 
 ## Traces to
 
-F-VLT-3, F-VLT-5, F-VLT-8, F-VLT-12, F-VLT-13, F-VLT-24, F-VLT-31, U-VLT-2, OQ-7, OQ-13
+F-VLT-3, F-VLT-5, F-VLT-8, F-VLT-12, F-VLT-13, F-VLT-24, F-VLT-31, F-VLT-35, OQ-7, OQ-13
 
 **Amended 2026-11-10 by ADR-VLT-013:** there is no arming button; arming, disarming, galvo scan and arming check are decided by the control node software, and the kill switch is the only physical control.

@@ -5,7 +5,7 @@
 
 ## Context
 
-NF-VLT-10 required that no node accepts commands over the network, and its acceptance (no listening command port) also ruled out SSH. The team still has to install and update the nodes (NF-VLT-13), start and stop the software, change configuration and calibration files, and fetch logs, recordings and statistics (F-VLT-29, F-VLT-32, U-VLT-6). Nothing in the requirements said how.
+NF-VLT-10 required that no node accepts commands over the network, and its acceptance (no listening command port) also ruled out SSH. The team still has to install and update the nodes (NF-VLT-13), start and stop the software, change configuration and calibration files, and fetch logs, recordings and statistics (F-VLT-29, F-VLT-32, F-VLT-39). Nothing in the requirements said how.
 
 ## Decision
 
@@ -20,8 +20,8 @@ The team needs to administer five Pis without monitors or keyboards. The safety 
 ## Consequences
 
 - NF-VLT-10 is rewritten; NF-VLT-28 allows a team machine for administration on the demo network.
-- Restarting the control or galvo software over SSH while armed is a safety fault (safe state, re-arming per U-VLT-2), not a control path.
+- Restarting the control or galvo software over SSH while armed is a safety fault (safe state, re-arming per F-VLT-35), not a control path.
 
 ## Traces to
 
-NF-VLT-10, NF-VLT-13, NF-VLT-28, F-VLT-8, F-VLT-17, F-VLT-21, F-VLT-29, F-VLT-32, U-VLT-2, U-VLT-6
+NF-VLT-10, NF-VLT-13, NF-VLT-28, F-VLT-8, F-VLT-17, F-VLT-21, F-VLT-29, F-VLT-32, F-VLT-35, F-VLT-39

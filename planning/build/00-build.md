@@ -2,7 +2,7 @@
 stage: control
 owner: build
 status: in_progress
-revision: 17
+revision: 18
 created: 2026-11-02T15:27
 updated: 2026-11-10T00:00
 input: problem statement (chat)
@@ -74,11 +74,12 @@ register: —
 | 2026-11-10 | VLT | concept | requirement added | proposed U-VLT-6 chain delay statistics (per stage and end to end, min/max/mean/jitter/percentiles, stage shares, histogram, saved per run); concept rev 9, CONTEXT rev 9 |
 | 2026-11-10 | VLT | concept | sponsor decision | review gap G1 resolved: no arming button, the kill switch is the only physical control, arming/disarming/galvo scan/arming check decided by the control node software (ADR-VLT-013, amends ADR-VLT-001/003/007/012); U-VLT-2, F-VLT-8/11/13/21/30/31 rewritten; proposed safety latch cleared by kill-switch press and release; concept rev 10, CONTEXT rev 10; wip commit on user request |
 | 2026-11-10 | VLT | concept | sponsor decision | review gap G2 resolved: monitoring laptop required to operate, no local indicators; U-VLT-7 added (state on connect, stale nodes, diagnostics logged locally), F-VLT-29 log contents extended; concept rev 11, CONTEXT rev 11 |
-| 2026-11-10 | VLT | concept | sponsor decision | review gap G3 resolved: key-only SSH for administration, separate from control of the loop, which has no command interface; config changes take effect at restart (ADR-VLT-014, amends ADR-VLT-003); NF-VLT-10 rewritten, NF-VLT-28 adjusted; concept rev 12 |
+| 2026-11-10 | VLT | concept | sponsor decision | review gap G3 resolved: key-only SSH for administration, separate from control of the loop, which has no command interface; config changes take effect at restart (ADR-VLT-014, amends ADR-VLT-003); NF-VLT-10 rewritten, NF-VLT-28 adjusted; concept rev 12; wip commit on user request |
+| 2026-11-10 | VLT | concept | Gate 1 preparation | checked against the report requirements and the lecture checklist [L] p. 287–288: design moved from §3–§5 to §10 (p. 287 rule); reason and lecture page per requirement; U-VLT-1 … 7 → F-VLT-34 … 40; G4 → NF-VLT-32, G5 → F-VLT-7/1; new F-VLT-41 (modes), NF-VLT-33 (timing of actions), NF-VLT-34 (reaction matrix, coverage); values for F-VLT-26/27/28; OQ owners as sub-team roles; lecture checklist table in §9; concept rev 13, CONTEXT rev 12 |
 
 ## Open items for the Director
 
-- PM review pending for VLT (concept rev 8) — sponsor answers in ADR-VLT-005 … 012; open: OQ-1 … OQ-5, OQ-7, OQ-12 (numeric limits), OQ-14 (envelope, error budget). rev 8 adds proposed debugging requirements (U-VLT-4/5, F-VLT-32/33, NF-VLT-31). rev 5 added the DRS completeness review: 12 proposed requirements, 4 in-place corrections, OQ-15/16; 16 open questions in total. Earlier note for rev 4: — sponsor has not approved the requirements yet. Four proposed requirements and six new clarification topics are ready for team discussion; 14 open questions in total. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
+- Gate 1 (team approval of the requirements) pending for VLT (concept rev 13); report rules and lecture checklist applied at rev 13. Earlier: PM review pending for VLT (concept rev 8) — sponsor answers in ADR-VLT-005 … 012; open: OQ-1 … OQ-5, OQ-7, OQ-12 (numeric limits), OQ-14 (envelope, error budget). rev 8 adds proposed debugging requirements (U-VLT-4/5, F-VLT-32/33, NF-VLT-31). rev 5 added the DRS completeness review: 12 proposed requirements, 4 in-place corrections, OQ-15/16; 16 open questions in total. Earlier note for rev 4: — sponsor has not approved the requirements yet. Four proposed requirements and six new clarification topics are ready for team discussion; 14 open questions in total. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
 - OQ-1 (camera model) is critical for NF-VLT-18 (30 ms deadline).
 - Discuss OQ-9/OQ-10 first (measurable aiming error and unbiased run scoring), then OQ-11/OQ-12 (recovery and temporal validity); OQ-13/OQ-14 cover calibration conventions and the acceptance envelope. These are unresolved decisions, not new approved scope.
 
