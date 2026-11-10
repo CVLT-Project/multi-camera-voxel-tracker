@@ -1,6 +1,6 @@
 # ADR-VLT-001 — Five Raspberry Pi 3 nodes on one wired Ethernet switch
 
-- **Status:** accepted · 2026-11-02 · decided by the sponsor during intake (grilling #6, #7)
+- **Status:** accepted · 2026-11-02 · decided by the sponsor during intake (grilling #6, #7) · amended by ADR-VLT-013
 - **Feature:** VLT
 
 ## Context
@@ -12,7 +12,7 @@ The system closes a loop camera → position → mirror → spot → camera. Har
 Five Raspberry Pi 3 nodes on one wired Ethernet switch:
 
 - three **camera nodes** (one MIPI camera each, on three orthogonal sides of the cube),
-- one **control node** (fuses observations into the 3D ball position, computes target and aiming error, hosts the arming button),
+- one **control node** (fuses observations into the 3D ball position, computes target and aiming error, decides arming in software — see amendment),
 - one **galvo node** (turns targets into mirror angles, drives the galvo through a converter board, switches the laser).
 
 Product code: `src/<node>/` — `src/camera/`, `src/control/`, `src/galvo/` (plus shared code as the architecture decides).
@@ -30,3 +30,5 @@ Separating galvo output from control keeps the safety-relevant actuator logic (c
 ## Traces to
 
 NF-VLT-14, NF-VLT-15, F-VLT-3, F-VLT-5, F-VLT-15
+
+**Amended 2026-11-10 by ADR-VLT-013:** there is no arming button; arming, disarming, galvo scan and arming check are decided by the control node software, and the kill switch is the only physical control.

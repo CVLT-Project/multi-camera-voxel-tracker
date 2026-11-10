@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 9
+revision: 10
 created: 2026-11-02T15:28
 updated: 2026-11-10T00:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@9
+input: VLT/10-intake.md@2, VLT/20-concept.md@10
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -18,7 +18,7 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | ball | the tracked object (≈ 5 cm) swinging on a string (≈ 1 m) | `ball` | VLT | active |
 | spot | the laser spot as seen by the cameras | `spot` | VLT | active |
 | camera node | Pi 3 with one camera; detects ball and spot, sends observations | `camera` | VLT | active |
-| control node | Pi 3 that fuses observations, predicts, computes targets, aiming error and hit rate; hosts the arming button | `control` | VLT | active |
+| control node | Pi 3 that fuses observations, predicts, computes targets, aiming error and hit rate; decides arming, disarming, galvo scan and arming check in software (ADR-VLT-013; the arming button was removed 2026-11-10) | `control` | VLT | active |
 | galvo node | Pi 3 that turns targets into mirror angles, drives the converter board, switches the laser | `galvo` | VLT | active |
 | converter board | hardware between galvo node and galvo driver producing the analog X/Y signals | `converter` | VLT | active |
 | observation | one camera's result for one frame: ball and spot image positions plus exposure time | `Observation` | VLT | active |
@@ -36,7 +36,7 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | camera calibration / galvo calibration | stored results of the automatic calibrations: cameras from the frame markers at every start, galvo by an on-demand scan (ADR-VLT-012) | `camera_calibration`, `galvo_calibration` | VLT | active |
 | reference data set | recorded, annotated frames of all cameras that the automated tests run against | `reference_data` | VLT | active |
 | monitoring laptop | observe-only sink for monitoring data | `monitor` | VLT | active |
-| kill switch | physical switch cutting the laser supply independent of software | — | VLT | active |
+| kill switch | physical switch cutting the laser supply independent of software; the operator's only physical control: press = disarm, release = re-arming allowed (ADR-VLT-013) | — | VLT | active |
 | restart session | one sender-process incarnation; sequence numbers are interpreted within it, preventing pre-restart messages from becoming current again (F-VLT-23) | `session_id` | VLT | proposed — PM review pending |
 | setup revision | identity of the installation configuration and calibration set that communicating nodes must agree on (F-VLT-24) | `setup_revision` | VLT | proposed — PM review pending |
 | galvo status | the galvo node's report to the control node: actual laser state with reason, applied target, galvo restart session (F-VLT-25) | `GalvoStatus` | VLT | proposed — PM review pending |
@@ -46,7 +46,7 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | transaction | an end-to-end real-time chain with its deadline class: T1 tracking (firm), T2 target-loss shutdown (hard), T3 unsafe-condition shutdown (hard), T4 monitoring (soft), T5 camera reintegration (no deadline) (NF-VLT-26, ADR-VLT-008) | `T1` … `T5` | VLT | active |
 | camera status | per camera: absent, unsynced, ball not seen, ball seen (F-VLT-11) | `CameraStatus` | VLT | active |
 | marker map | ArUco marker IDs on the cube frame with their measured cube coordinates; the reference for camera calibration (ADR-VLT-012) | `marker_map` | VLT | active |
-| galvo scan | the automatic galvo calibration: grid projected onto floor and walls, measured by the cameras, button held (F-VLT-13) | `galvo_scan` | VLT | active |
+| galvo scan | the automatic galvo calibration: grid projected onto floor and walls, measured by the cameras; started by the control node when no valid calibration exists or the arming check fails (F-VLT-13, ADR-VLT-013) | `galvo_scan` | VLT | active |
 | arming check | 3 projected check points measured before every arming (F-VLT-31) | `arming_check` | VLT | active |
 | health overview | the monitoring screen with per-node values, limits and highlighting (U-VLT-4) | `health` | VLT | proposed — PM review pending |
 | chain delay statistics | per-stage and end-to-end delay of the tracking chain with min, max, mean, jitter, percentiles over last second, run and session (U-VLT-6) | `ChainStats` | VLT | proposed — PM review pending |
@@ -54,6 +54,8 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | dry run | configured mode with laser disabled or galvo disabled (F-VLT-33) | `dry_run` | VLT | proposed — PM review pending |
 | fusion slot | one period of the fixed-rate fusion, aligned to the shared clock (ADR-VLT-009) | `FusionSlot` | VLT | active |
 | arming epoch | counter incremented at every arming; after a safety fault the galvo node needs a newer one (ADR-VLT-007) | `arm_epoch` | VLT | active |
+| safety latch | safe state that persists after an alarm or repeated safety faults until the kill switch is pressed and released (F-VLT-21) | `safety_latch` | VLT | proposed — PM review pending |
+| arming button | obsolete 2026-11-10 — removed; arming is done by the control node software (ADR-VLT-013) | — | VLT | obsolete |
 | hit radius | obsolete 2026-11-10 — replaced by the ball's image disc (ADR-VLT-005) | `hit_radius_mm` | VLT | obsolete |
 
 ## Naming rules

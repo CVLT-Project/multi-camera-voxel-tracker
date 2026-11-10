@@ -1,6 +1,6 @@
 # ADR-VLT-007 — One recovery policy: safety faults need re-arming, transient ball loss does not
 
-- **Status:** accepted · 2026-11-10 · decided by the sponsor (OQ-11)
+- **Status:** accepted · 2026-11-10 · decided by the sponsor (OQ-11) · amended by ADR-VLT-013
 - **Feature:** VLT
 
 ## Context
@@ -13,7 +13,7 @@ F-VLT-8, F-VLT-11, F-VLT-17 and F-VLT-21 gave different answers on when the lase
 - **Safety fault — safe state, re-arming required (U-VLT-2):** kill switch pressed; target timeout at the galvo node; galvo or control node restart; sync loss leaving fewer than two usable cameras or on the galvo node; alarm (F-VLT-16, F-VLT-26); converter link error; fewer than two cameras present; ball not seen by two cameras for > 1 s.
 - **Kill switch feedback:** the kill switch gets a sense contact read by the galvo node on a GPIO pin and reported in `GalvoStatus`.
 - **Arming epoch:** every arming increments `arm_epoch`, carried in each `Target`. After a safety fault the galvo node switches the laser on only for targets with a higher `arm_epoch` than at the fault, so a lost status message cannot bypass re-arming.
-- **`auto` mode:** re-arms after a safety fault only when the fault has cleared and the arming condition (≥ 2 cameras see the ball) has held continuously for a configured hold-off (default 2 s).
+- **`auto` mode** (since ADR-VLT-013 the only mode)**:** re-arms after a safety fault only when the fault has cleared and the arming condition (≥ 2 cameras see the ball) has held continuously for a configured hold-off (default 2 s).
 
 ## Rationale
 
@@ -27,3 +27,5 @@ Safety-relevant shutdowns need a deliberate decision to resume; short occlusions
 ## Traces to
 
 F-VLT-8, F-VLT-10, F-VLT-11, F-VLT-17, F-VLT-20, F-VLT-21, F-VLT-25, F-VLT-30, U-VLT-2, NF-VLT-3
+
+**Amended 2026-11-10 by ADR-VLT-013:** there is no arming button; arming, disarming, galvo scan and arming check are decided by the control node software, and the kill switch is the only physical control.
