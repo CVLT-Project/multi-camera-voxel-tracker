@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 20
+revision: 21
 created: 2026-11-02T15:27
-updated: 2026-11-10T00:00
+updated: 2026-11-12T12:00
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 9 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 16 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -78,10 +78,11 @@ register: —
 | 2026-11-10 | VLT | concept | Gate 1 preparation | checked against the report requirements and the lecture checklist [L] p. 287–288: design moved from §3–§5 to §10 (p. 287 rule); reason and lecture page per requirement; U-VLT-1 … 7 → F-VLT-34 … 40; G4 → NF-VLT-32, G5 → F-VLT-7/1; new F-VLT-41 (modes), NF-VLT-33 (timing of actions), NF-VLT-34 (reaction matrix, coverage); values for F-VLT-26/27/28; OQ owners as sub-team roles; lecture checklist table in §9; concept rev 13, CONTEXT rev 12 |
 | 2026-11-10 | VLT | concept | hardware decision | galvo set (AliExpress), PCM5102A I2S DAC, Laserfuchs 650 nm 1 mW Class 2 laser (ADR-VLT-015); OQ-2, OQ-5 resolved; link faults detected by effect monitoring (team choice, ≈ 600 ms); F-VLT-15, NF-VLT-16 rewritten; galvo specs still open (OQ-4); concept rev 14, CONTEXT rev 13 |
 | 2026-11-10 | VLT | concept | hardware data | galvo specs from the listing (±5 V, 0.33 V/°, ±15°/±30° optical, ≤ 0.5 ms step, ±12 V) added to ADR-VLT-015 and §6; NF-VLT-32 requires the cube within the usable scan angle; F-VLT-19 conditional; OQ-4 narrowed (wiring, supply, pattern board, level matching); concept rev 15 |
+| 2026-11-12 | VLT | concept | effect supervision | requirement part of the camera-team review (PR review 2026-11-11): F-VLT-42 optical-effect watchdog (ADR-VLT-019); T3/T6/T7 origins and bounds (ADR-VLT-018); converter link faults detected only through an observable effect, blanket 600 ms withdrawn (ADR-VLT-015); F-VLT-8/13/15/21/26/29/31, NF-VLT-23/26/29/30/34, reaction matrix and OQ-4 adjusted. Camera handoff, timing budget and reference plan deferred to the architecture (M3). |
 
 ## Open items for the Director
 
-- Gate 1 (team approval of the requirements) pending for VLT (concept rev 13); report rules and lecture checklist applied at rev 13. Earlier: PM review pending for VLT (concept rev 8) — sponsor answers in ADR-VLT-005 … 012; open: OQ-1 … OQ-5, OQ-7, OQ-12 (numeric limits), OQ-14 (envelope, error budget). rev 8 adds proposed debugging requirements (U-VLT-4/5, F-VLT-32/33, NF-VLT-31). rev 5 added the DRS completeness review: 12 proposed requirements, 4 in-place corrections, OQ-15/16; 16 open questions in total. Earlier note for rev 4: — sponsor has not approved the requirements yet. Four proposed requirements and six new clarification topics are ready for team discussion; 14 open questions in total. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
+- Gate 1 (team approval of the requirements) pending for VLT (concept rev 16, after the effect-supervision corrections); report rules and lecture checklist applied at rev 13. Earlier: PM review pending for VLT (concept rev 8) — sponsor answers in ADR-VLT-005 … 012; open: OQ-1 … OQ-5, OQ-7, OQ-12 (numeric limits), OQ-14 (envelope, error budget). rev 8 adds proposed debugging requirements (U-VLT-4/5, F-VLT-32/33, NF-VLT-31). rev 5 added the DRS completeness review: 12 proposed requirements, 4 in-place corrections, OQ-15/16; 16 open questions in total. Earlier note for rev 4: — sponsor has not approved the requirements yet. Four proposed requirements and six new clarification topics are ready for team discussion; 14 open questions in total. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
 - OQ-1 (camera model) is critical for NF-VLT-18 (30 ms deadline).
 - Discuss OQ-9/OQ-10 first (measurable aiming error and unbiased run scoring), then OQ-11/OQ-12 (recovery and temporal validity); OQ-13/OQ-14 cover calibration conventions and the acceptance envelope. These are unresolved decisions, not new approved scope.
 

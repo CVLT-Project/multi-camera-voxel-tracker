@@ -25,6 +25,8 @@ The sponsor wants a single physical control. The kill switch already cuts the la
 - The laser comes on without an operator action: during the arming check (< 1 s), during the galvo scan (≤ 60 s) and when tracking starts. All of this stays inside the cube, with a Class ≤ 2 laser. The team's laser-safety procedure (NF-VLT-2) must cover unattended laser-on.
 - ADR-VLT-007 relied on a deliberate decision to resume after a safety fault. Releasing the kill switch remains a deliberate act. For alarms (F-VLT-16, F-VLT-26) and repeated faults, a latched safe state cleared by pressing and releasing the kill switch is **proposed** in F-VLT-21. This needs PM review.
 
+**Amendment (ADR-VLT-019, 2026-11-12):** loss of the measurable spot while tracking is a latched alarm (F-VLT-42); the same watchdog during a scan or check switches the laser off and fails that scan or check, without latching the safe state by itself. Bounded scans, automatic decisions and kill-switch precedence are unchanged.
+
 ## Traces to
 
 F-VLT-35, F-VLT-8, F-VLT-11, F-VLT-13, F-VLT-21, F-VLT-30, F-VLT-31, NF-VLT-2, NF-VLT-3
