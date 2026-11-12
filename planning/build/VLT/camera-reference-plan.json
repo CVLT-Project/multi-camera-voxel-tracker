@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "profile_id": "VLT-CAM-1",
+  "status": "test plan and fixtures; no measurements or recordings yet",
+  "static_positions_mm": [
+    [
+      100,
+      100,
+      100
+    ],
+    [
+      100,
+      100,
+      700
+    ],
+    [
+      100,
+      700,
+      100
+    ],
+    [
+      100,
+      700,
+      700
+    ],
+    [
+      700,
+      100,
+      100
+    ],
+    [
+      700,
+      100,
+      700
+    ],
+    [
+      700,
+      700,
+      100
+    ],
+    [
+      700,
+      700,
+      700
+    ],
+    [
+      400,
+      400,
+      400
+    ],
+    [
+      400,
+      400,
+      300
+    ]
+  ],
+  "static_frames_per_position_per_camera": 80,
+  "swing_initial_deflections_mm": [
+    150,
+    225,
+    300
+  ],
+  "minimum_complete_reference_runs": 3,
+  "negative_cases": [
+    "no ball, laser off",
+    "ball present, laser off",
+    "spot off ball on each of three panels",
+    "spot on ball",
+    "partly occluded ball/spot",
+    "controlled outward carry-and-pause motion using a thin support with operator outside images"
+  ],
+  "minimum_frames_per_negative_case_per_camera": 80,
+  "annotations": {
+    "format": "JSON Lines, one record per stored frame; frame hash/camera/session/sequence/timestamps, ball centre+radius or null, spot or null, laser state and scenario/run boundaries",
+    "review_fraction": 0.1,
+    "minimum_independently_reviewed_frames_per_camera": 100,
+    "second_reviewer_max_ball_centre_disagreement_px": 1,
+    "second_reviewer_max_radius_disagreement_px": 1,
+    "second_reviewer_max_spot_disagreement_px": 1,
+    "uncertain_labels": "exclude from accuracy denominator with explicit reason; keep as missing/uncertain cases in run scoring, never turn into hits"
+  },
+  "reference_method": {
+    "static": "independent physical coordinates measured with <= 2 mm uncertainty; supports/operators outside images",
+    "dynamic": "manually labelled multi-view frames triangulated offline with static-validated calibration, independent of production detection/fusion; reference uncertainty <= 2 mm must be established; this is not an independent sensor truth claim",
+    "synthetic": "exact straight-line, circular and accelerating trajectories within 1000 mm/s and 4000 mm/s^2; exact sampling/clock/delivery schedule",
+    "physical_end_to_end": "time-weighted observed hits, 3 consecutive runs with 3 cameras and 3 with each pair; independent timing instrument and photodiode"
+  },
+  "recording": {
+    "image_format": "lossless PNG at the selected 640x480 capture rate; timestamps and calibration preserved",
+    "default_record_images": false,
+    "mode": "explicit reference profile; normal loop must not block",
+    "per_camera_buffer_limit_mib": 64,
+    "full_dataset_archive_limit_gib": 16,
+    "on_overflow": "count drops, stop/invalidate the affected reference take, preserve tracking; incomplete runs cannot qualify",
+    "repository": "manifest, annotations, replay observations and reviewed lossless reference pack; full raw takes retained in the local project reference archive, not silently committed as unbounded binaries",
+    "manifest": "SHA-256 file hashes, setup/profile/calibration IDs, room/light/daylight and exposure/gain/AWB settings, geometry/reference uncertainties, scope of each take; no people in stored images"
+  },
+  "qualification": {
+    "duration_min": 10,
+    "monitoring_cases": [
+      "off",
+      "maximum configured load",
+      "paused/disconnected"
+    ],
+    "live_timing_and_resources_on_pi3": true,
+    "all_camera_pairs": true,
+    "component_error_p99_mm": [
+      10,
+      8,
+      5
+    ],
+    "joint_aiming_error_p95_mm": 23,
+    "minimum_hit_rate": 0.8,
+    "failures": "missing timestamps, bad metadata, frame backlogs, exposure >2 ms, row correction outside tolerance, insufficient contrast/calibration or unmet budgets fail qualification; no fabricated pass"
+  },
+  "deliverables": [
+    "camera hardware/mode identification and reproducible settings",
+    "measured geometry and marker map",
+    "calibration data plus IDs",
+    "observations/schema conformance and restart report",
+    "reviewed reference manifest/labels/data",
+    "10-minute latency, rate, CPU/RAM and optical qualification report"
+  ]
+}

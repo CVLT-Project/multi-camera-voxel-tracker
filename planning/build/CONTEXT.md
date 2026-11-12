@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 14
+revision: 15
 created: 2026-11-02T15:28
-updated: 2026-11-12T12:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@16
+updated: 2026-11-12T14:00
+input: VLT/10-intake.md@2, VLT/20-concept.md@17
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -59,6 +59,10 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | release | start of a run: the ball, held still > 100 mm from rest, starts moving towards rest (F-VLT-7) | `release` | VLT | proposed — Gate 1 pending |
 | operating mode | start, calibrating galvo, ready, arming check, tracking (normal / degraded), safe (latched or not) (F-VLT-41) | `Mode` | VLT | proposed — Gate 1 pending |
 | optical-effect watchdog | while the laser is on, a measurable spot must be seen within 500 ms and then every 500 ms; on expiry the laser is off within 100 ms (F-VLT-42, ADR-VLT-019) | — | VLT | proposed — Gate 1 pending |
+| reference installation | proposed physical baseline: 800 mm cube, nominal rest centre (400, 400, 300) mm, white ball, grey floor and far walls, two elevated side views and an offset overhead view (ADR-VLT-016) | — | VLT | proposed — Gate 2 |
+| camera profile | VLT-CAM-1: 640 × 480, 80–120 fps, startup exposure then locked, timestamp mapping and rectification (ADR-VLT-020); camera model not selected | `profile_id` | VLT | proposed — Gate 2 |
+| calibration identity | per-camera hash of a validated calibration result, separate from the installation identity `setup_revision` (ADR-VLT-020) | `calibration_id` | VLT | proposed — Gate 2 |
+| startup preparation | laser-off Start phase, separate from galvo scan attempts (ADR-VLT-017) | — | VLT | proposed — change request after Gate 1 |
 | reaction matrix | per error: detection, reaction, time limit, log (NF-VLT-34) | — | VLT | proposed — Gate 1 pending |
 | hit radius | obsolete 2026-11-10 — replaced by the ball's image disc (ADR-VLT-005) | `hit_radius_mm` | VLT | obsolete |
 
