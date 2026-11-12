@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 23
+revision: 26
 created: 2026-11-02T15:27
-updated: 2026-11-12T16:00
+updated: 2026-11-12T19:00
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 18 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 22 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -81,6 +81,10 @@ register: —
 | 2026-11-12 | VLT | concept | effect supervision | requirement part of the camera-team review (PR review 2026-11-11): F-VLT-42 optical-effect watchdog (ADR-VLT-019); T3/T6/T7 origins and bounds (ADR-VLT-018); converter link faults detected only through an observable effect, blanket 600 ms withdrawn (ADR-VLT-015); F-VLT-8/13/15/21/26/29/31, NF-VLT-23/26/29/30/34, reaction matrix and OQ-4 adjusted. Camera handoff, timing budget and reference plan deferred to the architecture (M3). |
 | 2026-11-12 | VLT | concept | M3 groundwork | camera-team handoff recast as proposed §11 content: interfaces and messages, T1 budget in five phases, g = 2 ms with derivation, reference plan; ADR-VLT-016/017/020/021/022 proposed for the M3 consistency review (Gate 2); requirement changes listed as change requests, not applied. Remaining transactions, integration tests and fault injection are M3 to-dos. |
 | 2026-11-12 | VLT | concept | M3 groundwork | from the camera-team PR #6 (not merged): T2, T3 (frame-evidenced and local) and T5 budgets in §11.2, camera fault-injection tests in §11.4; T3 corrected (kill switch separate, budget consistent with T1). Requirements unchanged. |
+| 2026-11-12 | VLT | concept | hardware fact | camera given: Raspberry Pi Camera Module v2.1 (IMX219, rolling shutter) on Pi 3 Model B+; OQ-1 resolved, §6 updated; the cropped 640 × 480 mode (≈ 26.5° × 20°) conflicts with the proposed layout (≥ 45°) — open check in §11.6. |
+| 2026-11-12 | VLT | concept | report review | consistency fixes for the M2 report (rev 20): galvo, DAC and laser recorded as given hardware (ADR-VLT-015); open-question limits marked as architecture values with the requirements that need them; F-VLT-42 → ADR-VLT-018/019; F-VLT-14 row, reaction-matrix camera row, checklist row 18 and duplicate T1/π wording corrected; no requirement changes meaning. |
+| 2026-11-12 | VLT | concept | start-up and envelope | rev 21, on user instruction: F-VLT-28 allows the start-up galvo scan (conflict with F-VLT-13 resolved); operating envelope from the OQ-14 proposal fixed in NF-VLT-1 (release 100 … 300 mm, ≤ 1000 mm/s, ≤ 4000 mm/s²); risk R-1 (camera mode vs. 30 ms) recorded in §8. |
+| 2026-11-12 | VLT | concept | review follow-up | NF-VLT-1 lowest release ≈ 120 mm (F-VLT-7 threshold), room lighting defined and recorded; F-VLT-28 failure path and second-scan case; ADR-VLT-016 no longer claims the operating envelope (now NF-VLT-1). |
 
 ## Open items for the Director
 
