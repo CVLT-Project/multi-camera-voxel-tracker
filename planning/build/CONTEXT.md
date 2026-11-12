@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 15
+revision: 16
 created: 2026-11-02T15:28
 updated: 2026-11-12T14:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@17
+input: VLT/10-intake.md@2, VLT/20-concept.md@18
 ---
 
 # CONTEXT — Ubiquitous Language

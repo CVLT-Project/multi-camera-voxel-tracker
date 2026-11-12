@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 22
+revision: 23
 created: 2026-11-02T15:27
-updated: 2026-11-12T14:00
+updated: 2026-11-12T16:00
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 17 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 18 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -80,6 +80,7 @@ register: —
 | 2026-11-10 | VLT | concept | hardware data | galvo specs from the listing (±5 V, 0.33 V/°, ±15°/±30° optical, ≤ 0.5 ms step, ±12 V) added to ADR-VLT-015 and §6; NF-VLT-32 requires the cube within the usable scan angle; F-VLT-19 conditional; OQ-4 narrowed (wiring, supply, pattern board, level matching); concept rev 15 |
 | 2026-11-12 | VLT | concept | effect supervision | requirement part of the camera-team review (PR review 2026-11-11): F-VLT-42 optical-effect watchdog (ADR-VLT-019); T3/T6/T7 origins and bounds (ADR-VLT-018); converter link faults detected only through an observable effect, blanket 600 ms withdrawn (ADR-VLT-015); F-VLT-8/13/15/21/26/29/31, NF-VLT-23/26/29/30/34, reaction matrix and OQ-4 adjusted. Camera handoff, timing budget and reference plan deferred to the architecture (M3). |
 | 2026-11-12 | VLT | concept | M3 groundwork | camera-team handoff recast as proposed §11 content: interfaces and messages, T1 budget in five phases, g = 2 ms with derivation, reference plan; ADR-VLT-016/017/020/021/022 proposed for the M3 consistency review (Gate 2); requirement changes listed as change requests, not applied. Remaining transactions, integration tests and fault injection are M3 to-dos. |
+| 2026-11-12 | VLT | concept | M3 groundwork | from the camera-team PR #6 (not merged): T2, T3 (frame-evidenced and local) and T5 budgets in §11.2, camera fault-injection tests in §11.4; T3 corrected (kill switch separate, budget consistent with T1). Requirements unchanged. |
 
 ## Open items for the Director
 

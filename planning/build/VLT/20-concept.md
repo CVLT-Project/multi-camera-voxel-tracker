@@ -2,10 +2,10 @@
 stage: concept
 owner: build-concept
 status: in_progress
-revision: 17
+revision: 18
 version: 0.1
 created: 2026-11-02T16:10
-updated: 2026-11-12T14:00
+updated: 2026-11-12T16:00
 input: VLT/10-intake.md@2, requirements review request (chat, 2026-11-06), DRS completeness review request and sponsor answers to OQ-6 … OQ-17 (chat, 2026-11-10), sponsor decisions on operator control, operator feedback and admin access (chat, 2026-11-10), report requirements M3 and lecture slides [L] (chat, 2026-11-10), hardware selection galvo/DAC/laser (chat, 2026-11-10), effect-supervision and shutdown-origin corrections from the camera-team review (PR review, 2026-11-11), camera-team M3 groundwork (proposed, Gate 2)
 feature: VLT
 ---
@@ -550,15 +550,17 @@ Budget phases per [L] p. 36–40, 292–299: **input** (sensing and on-node proc
 | Transaction | Owner (role) | Deadline (NF-VLT-26) | Input | Transmission | Reception | Action | Output | Reserve |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | T1 tracking | System design | firm, p99 ≤ 30 ms | 10 ms (exposure → readout 6, detection 4) | 2 ms (camera → control 1, control → galvo 1) | 11 ms (wait for fusion slot incl. grid jitter) | 1 ms (fusion, prediction) | 3 ms (DAC 2, mirror settling 1) | 3 ms |
-| T2 target-loss shutdown | Sensor and actuator modules | hard, 100 ms + 10 ms | — | — | — | open | open | open |
-| T3 fast unsafe-condition shutdown | System design | hard, 100 ms | open | open | open | open | open | open |
+| T2 target-loss shutdown | Sensor and actuator modules | hard, 100 ms + 10 ms from the last fresh valid target | 100 ms (local target timeout, F-VLT-10) | — (local) | — (local) | 1 ms (timeout detection) | 8 ms (laser supply off) | 1 ms |
+| T3 fast unsafe-condition shutdown, frame-evidenced (< 2 cameras, sync loss, spot outside the cube, spot while off) | System design | hard, 100 ms from the first exposure showing the condition | 10 ms (exposure → readout 6, detection 4) | 2 ms (camera → control 1, control → galvo 1) | 11 ms (wait for fusion slot) | 1 ms (condition check, safe decision) | 10 ms (laser supply off) | 66 ms |
+| T3, locally detected (output stream stopped, galvo restart) | Sensor and actuator modules | hard, 100 ms from the local event | — (local event) | — | — | 1 ms (detection) | 10 ms (laser supply off) | 89 ms |
 | T6 effect supervision (F-VLT-26/42) | System design | hard, 500 ms + 100 ms | open | open | open | open | open | open |
 | T7 galvo hang (watchdog) | Sensor and actuator modules | hard, 1 s total | — | — | — | open | open | open |
-| kill switch | Sensor and actuator modules | 100 ms (F-VLT-30) | open | — | — | open | open | open |
+| kill switch | Sensor and actuator modules | 100 ms (F-VLT-30); laser cut by hardware at once, software follows | open | — | — | open | open | open |
+| T5 camera reintegration | Sensor and actuator modules | none (NF-VLT-26) | restart, clock synchronization (F-VLT-20) | CameraCalibration every 500 ms (11.1) | control validates the calibration before using frames | automatic calibration ≤ 10 s (F-VLT-12) | — | — |
 | arming check (F-VLT-31) | System design | ≤ 1 s | open (proposal: ≤ 250 ms per point, ADR-VLT-020) | open | open | open | open | open |
 | galvo calibration scan (F-VLT-13) | System design | ≤ 60 s per attempt | open | open | open | open | open | open |
 
-The T1 split is the 9-stage camera budget of ADR-VLT-021 mapped onto the five phases; each stage's measured high-water mark must fit. **To do (M3):** budgets for T2, T3, T6, T7, kill switch, arming check, galvo scan and every laser-off reaction of the reaction matrix (NF-VLT-34).
+The T1 split is the 9-stage camera budget of ADR-VLT-021 mapped onto the five phases; each stage's measured high-water mark must fit. T2, T3 and T5 are first proposals (camera-team PR, adapted): T2 fits the 10 ms after the 100 ms timeout; T3 reuses the T1 camera stages and leaves 66 ms reserve. The kill switch is not part of T3: it cuts the laser by hardware (F-VLT-30). **To do (M3):** budgets for T6, T7, kill switch, arming check, galvo scan and every other laser-off reaction of the reaction matrix (NF-VLT-34).
 
 Numeric validity limits proposed with T1 (ADR-VLT-021): fusion period 10 ms, placement 5 ms after the slot; observation age ≤ 25 ms; exposure skew ≤ 20 ms; prediction horizon ≤ 30 ms; target transport age ≤ 5 ms; oldest source to target use ≤ 30 ms; target expiry min(t_place + 1 ms, oldest source + 30 ms), exclusive; sync-status age ≤ 100 ms, reported every ≤ 50 ms; future-timestamp tolerance 2 ms; galvo interpolation period ≤ 0.5 ms.
 
@@ -572,8 +574,12 @@ Numeric validity limits proposed with T1 (ADR-VLT-021): fusion period 10 ms, pla
 
 | Transaction | End-to-end measurement on the hardware | Faults injected (NF-VLT-23) |
 | --- | --- | --- |
-| T1 | LED flash in view timed by an independent instrument → photodiode at the spot (NF-VLT-29); 10-min loaded run, p99 and maximum, per-stage high-water marks | to do |
-| T2, T3, T6, T7, kill switch, arming check, galvo scan | to do | to do |
+| T1 | LED flash in view timed by an independent instrument → photodiode at the spot (NF-VLT-29); 10-min loaded run, p99 and maximum, per-stage high-water marks | malformed observations: invalid JSON, unknown schema version, missing fields, datagram > 1400 bytes, NaN/±Inf coordinates → dropped and logged, no crash or memory growth (F-VLT-23); duplicate, out-of-order and wrapped sequence numbers → only newer frames used (11.1) |
+| T1 degraded / T3 | photodiode at the spot against the injection time (NF-VLT-29) | unplug one camera while tracking → excluded within 100 ms, tracking continues with two cameras, no laser interruption (F-VLT-11); unplug a second camera → laser off ≤ 100 ms, safe state (T3) |
+| T3 (clock) | as above | 50 ms clock step or suppressed PTP on a camera node → node not synced, its observations excluded within 100 ms, diagnostic logged (F-VLT-20/22) |
+| camera moved | log of the pose check | displace a calibrated camera while tracking → reprojection error > 2 px detected within 1 s, camera absent, degraded mode (F-VLT-12) |
+| T2 | photodiode against the cable pull | unplug the control node's cable → laser off ≤ 100 ms + 10 ms (F-VLT-10) |
+| T6, T7, kill switch, arming check, galvo scan | to do | to do |
 
 Accuracy reference plan (ADR-VLT-022, `VLT/camera-reference-plan.json`): ten independently measured static positions (uncertainty ≤ 2 mm), three reference swings (150/225/300 mm), laser on/off and no-ball cases, second review of ≥ 10 % of the annotations. Proposed combined error budget against the 25 mm ball radius: perception ≤ 10 mm, prediction and timing ≤ 8 mm, galvo placement ≤ 5 mm (all p99), reserve 2 mm. **To do (M3):** fault injection per transaction ([L] p. 283–284).
 
