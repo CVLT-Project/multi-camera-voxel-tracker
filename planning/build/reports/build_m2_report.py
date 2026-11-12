@@ -148,6 +148,8 @@ def adrs():
         title = t.splitlines()[0].lstrip("# ").strip()
         ident, _, name = title.partition(" — ")
         status = re.search(r"^- \*\*Status:\*\* (.+)$", t, re.M).group(1)
+        if "Gate 2" in status:  # M3 architecture proposals are not part of the M2 report
+            continue
         rationale = section(t, "## Rationale").strip().split("\n\n")[0].replace("\n", " ")
         if status.startswith("superseded"):
             state = "superseded by " + re.search(r"ADR-VLT-\d+", status).group(0)
