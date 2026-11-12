@@ -2,11 +2,11 @@
 stage: concept
 owner: build-concept
 status: in_progress
-revision: 15
+revision: 16
 version: 0.1
 created: 2026-11-02T16:10
-updated: 2026-11-10T00:00
-input: VLT/10-intake.md@2, requirements review request (chat, 2026-11-06), DRS completeness review request and sponsor answers to OQ-6 … OQ-17 (chat, 2026-11-10), sponsor decisions on operator control, operator feedback and admin access (chat, 2026-11-10), report requirements M3 and lecture slides [L] (chat, 2026-11-10), hardware selection galvo/DAC/laser (chat, 2026-11-10)
+updated: 2026-11-12T11:00
+input: VLT/10-intake.md@2, requirements review request (chat, 2026-11-06), DRS completeness review request and sponsor answers to OQ-6 … OQ-17 (chat, 2026-11-10), sponsor decisions on operator control, operator feedback and admin access (chat, 2026-11-10), report requirements M3 and lecture slides [L] (chat, 2026-11-10), hardware selection galvo/DAC/laser (chat, 2026-11-10), camera-team acquisition profile, handoff contract, and perception budget proposal (chat, 2026-11-12)
 feature: VLT
 ---
 
@@ -68,6 +68,10 @@ Galvo specs from the listing (rev 15): ±5 V input at 0.33 V/°, ±15° optical 
 
 
 OQ-6, OQ-8, OQ-9, OQ-10, OQ-11, OQ-15, OQ-16, OQ-17 decided; OQ-12 decided for the deadline classes (numeric limits still open); OQ-14 decided for degraded mode (envelope and error budget still open); OQ-13 open for team discussion. New ADRs: ADR-VLT-005 … ADR-VLT-011. Rewritten: F-VLT-3/4/5/6/7/8/11/13/21, NF-VLT-1/2/18, NF-VLT-23 (hang), NF-VLT-26 (decided). F-VLT-14 deferred. Added: F-VLT-30 (kill-switch sense), NF-VLT-30 (on-chip watchdog). The other requirements proposed on 2026-11-10 remain proposals until the PM review.
+
+### Camera-team specification (proposed) — 2026-11-12 (rev 16)
+
+The camera team proposes the camera acquisition profile (F-VLT-43), handoff contract (F-VLT-44), and perception accuracy allocation (NF-VLT-35), supported by ADR-VLT-020, ADR-VLT-021, and ADR-VLT-022 (proposed for M3 consistency review, Gate 2). Raspberry Pi 3 is retained; camera model selection and driver binding remain open pending qualification. Low-level wire contract details, JSON schemas and architectural transaction mapping are defined in §11 as M3 architectural groundwork. Requirements owned by other teams (galvo actuators, control fusion, safety watchdog, and project-wide report generator) remain unchanged.
 
 ## 1. Purpose
 
@@ -149,6 +153,8 @@ _Rev 13 (cleanup for Gate 1): requirements state what is given and observable. W
 | F-VLT-39 | (was U-VLT-6) Proposed: chain delay statistics. For every position update the delay of each stage of the tracking chain is traced: capture and readout, detection, camera → control transmission, waiting for the position update, fusion and prediction, control → galvo transmission, waiting until placement, galvo output. Stages that run per camera are traced per camera. Mirror settling, which the nodes can't see, comes from the independent measurement (NF-VLT-29). For each stage and end to end, the monitoring laptop shows count, minimum, maximum, mean, standard deviation (jitter), median, 95th and 99th percentile. Three windows: last second, current run, whole session (resettable on the laptop). It also shows each stage's share of the end-to-end delay and a histogram with the 30 ms limit (NF-VLT-18) and each stage budget marked. Deadline misses and discarded targets are counted. At the end of each run and session the statistics are saved on the laptop as a file (numbers only) for the test report. | The deadline is met only if every stage stays in its budget; maxima and their distribution must be visible. [L] p. 39–40 (budget per stage), 68 (action duration statistics), 266 (testing the temporal domain). | 10-min run: statistics for all stages and windows shown and saved; the sum of stage means equals the end-to-end mean within 1 ms; adding a 5 ms delay in one stage (test profile) shows in that stage's statistics and share within 2 s, not in the others; values agree with the logged per-stage timestamps of NF-VLT-18. | sponsor 2026-11-10 | [estimated] |
 | F-VLT-40 | (was U-VLT-7) Operating the demo requires the monitoring laptop: it is the operator's only status display, and no node has a local indicator (sponsor 2026-11-10, review G2). Without the laptop the system still tracks and stays safe (NF-VLT-7), but the operator sees only the laser. Therefore: (a) within 2 s of connecting or reconnecting, the laptop shows the current state of every node. That covers mode, armed or safe, an active safety latch with its cause, the kill switch, and the reason the system is not armed. It also shows the diagnostics and alarms since the node started, not only events after the connection. (b) A node from which no monitoring data has arrived for 2 s is shown as stale, and its last values are marked as not current. (c) Every diagnostic and alarm shown on the laptop is also written to the local log (F-VLT-29). | The only display must never show an old state as current. [L] p. 52 (soft deadline), 163 (monitoring the message flow). | Start without the laptop, inject an alarm and an invalid setup on one camera, then connect the laptop: within 2 s it shows the latch with its cause, the setup error naming the camera, and why the system is not armed. Stop one node's monitoring sender: shown as stale within 2 s. After a session without the laptop every injected fault is in the log. | sponsor 2026-11-10 (G2) | [estimated] |
 | F-VLT-41 | Proposed: the system has these operating modes, shown on the display (F-VLT-34) and logged (F-VLT-29). **Start** (ground state, calibrating cameras, synchronizing clocks). **Calibrating galvo** (F-VLT-13). **Ready** (not armed, all prerequisites met except the ball). **Arming check** (F-VLT-31). **Tracking**, normal or degraded (F-VLT-11). **Safe**, latched or not (F-VLT-21). The configurations are: normal, dry run *laser disabled*, dry run *galvo disabled* (F-VLT-33), with or without session recording (F-VLT-32). Changes towards laser off take effect within the deadlines of NF-VLT-26. The laser can come on only through *arming check* → *tracking*, or in *calibrating galvo*. A configuration takes effect only at a node start. No other mode or transition exists. | Modes and mode changes must be listed so that every transition is tested; switching configuration at runtime is unsafe. [L] p. 186 (mode changes take effect at the ground state), 287 (modes of operation and configurations). | In the fault-injection campaign (NF-VLT-23) and three normal runs, the logged mode sequence contains only the listed transitions; the laser is never on in a mode other than *arming check*, *tracking* or *calibrating galvo* (photodiode against log); changing the configuration of a running node has no effect until restart. | lecture checklist p. 287 (modes, mode changes) | [estimated] |
+| F-VLT-43 | Proposed — **camera acquisition profile** (VLT-CAM-1). Each camera node captures frames at 640 × 480 rectified resolution, 80–120 captured observations/s (frame interval ≤ 13 ms), processing one current frame at a time with no growing queue. Exposure duration starts at 1000 µs, bounded within 250–2000 µs; analogue gain 1–8, digital gain 1. Startup auto-exposure and auto-white-balance complete in ≤ 5 s, then settings lock until restart. Operation uses ordinary room lighting with no extra lamps. Global shutter or validated rolling-shutter timing with motion rectification is required; timestamp-mapping error to the shared clock must be ≤ 0.5 ms. Under this profile, ball diameter is ≥ 14 px and readable marker short side is ≥ 12 px throughout the cube envelope. A camera that fails optical limits, timing limits or lacks exposure metadata stays unqualified/absent with a diagnostic. | Fixes the camera-team operating and handoff conditions without selecting hardware or claiming its performance. [L] p. 111–120 (observation and temporal accuracy). | On each actual Pi 3 camera node, qualify the profile and 10-minute loaded timing/resources (NF-VLT-19); record reproducible image, driver, exposure, gain, AWB and row settings. No queue growth or arrival-callback timestamps. All static, dynamic and laser-on cases pass F-VLT-1, F-VLT-2, F-VLT-12 and the selected budgets; failures remain explicit. | camera team · ADR-VLT-020/021 | [estimated] |
+| F-VLT-44 | Proposed — **camera observation and calibration handoff**. Each camera node sends observations to the control node using the versioned Observation schema (UDP unicast, UTF-8 JSON, datagram ≤ 1400 bytes). Each observation carries camera ID (0, 1, 2), monotonic frame sequence, common-frame exposure time in the shared clock, rectified ball centre and radius (or null), spot position (or null), raw sample timestamps, clock offset, sync state, session ID, setup revision, profile ID, and calibration ID. Each camera node announces its calibration result via a CameraCalibration message every 500 ms (and upon restart) containing camera/session/profile/setup/calibration IDs, intrinsic matrix K, distortion coefficients, rotation/translation into cube coordinates, fit residual, and marker count. The control node validates identity, units, finite values, and fit residual before accepting observations; unknown or retired session/calibration data is discarded. Two healthy cameras continue tracking while a third calibrates and rejoins. | Per-camera automatic restart must neither apply old geometry nor invalidate the whole healthy installation. [L] p. 137 (communication errors), 240 (reintegration). | Contract tests verify schema compliance, wrong/missing ID rejection, setup mismatch handling, and stale/duplicate/out-of-order rejection. Two healthy cameras maintain tracking while the third announces and validates a new calibration. Wire int64 timestamps are validated; datagrams > 1400 bytes and non-finite values are rejected. | camera team · ADR-VLT-020 | [estimated] |
 
 ## 4. User Interaction Requirements
 
@@ -192,6 +198,7 @@ Merged into §3 at rev 13 so that the report uses only F- and NF- IDs: U-VLT-1 �
 | NF-VLT-32 | Proposed — **physical layout for measurable hits** (review G4). The galvo is placed so that, throughout the swing envelope (OQ-14), every pair of cameras includes at least one camera that sees the spot on the ball. The floor and walls used by the galvo scan and the arming check (F-VLT-13/31) are each visible to at least two cameras and don't block any camera's view of the tracking volume. Seen from the galvo, the whole cube lies within the usable optical scan angle with ≥ 10 % margin. The usable angle depends on the DAC level, the driver gain and any amplifier (ADR-VLT-015, OQ-4). | NF-VLT-1 must hold for every camera pair, and a hit can only be counted when a camera sees the lit side of the ball. Given hardware geometry is a requirement. [L] p. 287. | On the reference data set (NF-VLT-21): for every camera pair, at least one camera of the pair sees the spot in ≥ 95 % of the frames of the swinging runs with the spot on the ball. Every scan point of F-VLT-13 is seen by ≥ 2 cameras. Commanding the cube's corners: every corner is reached with the DAC output ≤ 90 % of its full scale. | review G4 · NF-VLT-1 | [estimated] |
 | NF-VLT-33 | Proposed — **timing of actions.** Every periodic action has a specified minimum and maximum period and a worst-case execution time: frame capture and detection per camera, position update and prediction, galvo output, galvo status report, monitoring. The worst-case execution time is measured on the target under the load hypothesis (NF-VLT-27) as the high-water mark over a 10-min run. Each action meets execution time < period. Every RT image that is used meets the phase-sensitivity condition update delay + period + execution time < temporal accuracy (F-VLT-22). We choose the period values, so they are set in the architecture. | Deadlines can only be met if every action has a bounded period and execution time. [L] p. 65 (d_WCET, d_MINT), 72 (WCET), 120 (phase-sensitive RT images), 266 (high-water mark), 287 (timing of actions). | For every listed action: measured period minimum and maximum within the specified bounds and execution-time high-water mark below the period over a 10-min run with monitoring at maximum; the phase-sensitivity condition holds with the measured values. | lecture checklist p. 287 (timing of actions) | [estimated] |
 | NF-VLT-34 | Proposed — **error detection coverage and reaction matrix.** Every error in the fault hypothesis (NF-VLT-23) is covered by the reaction matrix below: what detects it, how the system reacts, within which time, and what is logged (F-VLT-29). **Coverage target:** 100 % of the injected errors within the hypothesis are detected and handled within their time limit, with each matrix row injected at least 10 times on the real setup. Errors beyond the hypothesis are injected and their outcome recorded. | Error detection needs numbers and mechanisms; every detectable error maps to a defined reaction. [L] p. 254 (reaction matrix), 284 (fault injection), 288 (error detection coverage). | Fault-injection report: per row the number of injections, detections and reactions within the time limit (target 10 of 10 for every row); beyond-hypothesis cases listed with their outcome. | lecture checklist p. 288 (error detection coverage) | [estimated] |
+| NF-VLT-35 | Proposed — **camera perception and triangulation budget allocation**. Under the reference installation, the perception component (detection, calibration, and triangulation) error must be ≤ 10 mm p99 for valid reconstructed samples across all three cameras and for each of the three two-camera pairs. This allocation fits within the combined error budget: perception ≤ 10 mm p99 + prediction and timing ≤ 8 mm p99 + galvo placement ≤ 5 mm p99 + 2 mm reserve = 25 mm ball radius. The 80 % hit-rate run criterion (NF-VLT-1) remains decisive. | Earlier separate allowances did not close the ball-radius budget. [L] p. 116–120 (temporal accuracy), 264–266 (verification). | Evaluated against the reference dataset (NF-VLT-21): valid reconstructed samples meet ≤ 10 mm p99 with three cameras and each pair. Measurement and reference uncertainty ≤ 2 mm established. Actual hardware performance remains unverified until camera and setup measurement. | camera team · ADR-VLT-022 | [estimated] |
 
 **Reaction matrix (NF-VLT-34)**
 
@@ -296,12 +303,15 @@ Fixed running cost only — no usage-dependent drivers (hardware bought once; no
 | OQ-15 | Loop activation | Time-triggered fusion; galvo applies at `t_place_ns` and interpolates | decisions/ADR-VLT-009-time-triggered-loop.md |
 | OQ-16 | Galvo hang | On-chip watchdog on the galvo node | decisions/ADR-VLT-010-onchip-watchdog-galvo.md |
 | OQ-17 | Prediction model | Constant velocity / acceleration, no pendulum model | decisions/ADR-VLT-011-generic-motion-prediction.md |
+| OQ-1, OQ-7, OQ-13 (camera part) | Camera acquisition, exposure, calibration and data handoff profile | Proposed: 640 × 480 / 80–120 fps, bounded exposure/gain, locked AWB, row-rectification, UDP/JSON schema handoff; camera model deferred | decisions/ADR-VLT-020-camera-acquisition-and-handoff-profile.md |
+| OQ-12 (camera part) | Camera timing and validity budget | Proposed: fusion 10 ms, source age ≤ 25 ms, skew ≤ 20 ms, g = 2 ms, mapping error ≤ 0.5 ms, 30 ms stage allocation | decisions/ADR-VLT-021-camera-timing-and-validity-budget.md |
+| OQ-14 (camera part) | Camera perception error budget and reference qualification plan | Proposed: perception allocation ≤ 10 mm p99, 10 static positions, 3 swings, reference uncertainty ≤ 2 mm | decisions/ADR-VLT-022-camera-error-budget-and-reference-qualification.md |
 
 ### Open questions
 
 _Owners are sub-team roles; no names. Since rev 13 the open questions block only numeric values and hardware facts; every requirement already states what has to hold._
 
-- **OQ-1** — Camera model: resolution, frame rate modes, global vs. rolling shutter. Select and measure a mode against the 30 ms budget, including exposure/readout and detection; the earlier ≈ 90 fps figure is an unverified estimate, not a consequence of that deadline alone. — owner: Sensor and actuator modules — blocks: NF-VLT-18, F-VLT-1, F-VLT-2, the camera node design.
+- **OQ-1** — Camera model: resolution, frame rate modes, global vs. rolling shutter. ADR-VLT-020 proposes the VLT-CAM-1 acquisition profile (640 × 480 at 80–120 fps) on Pi 3. Camera model selection, physical qualification and driver binding remain open. — owner: Sensor and actuator modules — blocks: NF-VLT-18, F-VLT-1, F-VLT-2, F-VLT-43, the camera node design.
 - **OQ-2** — resolved 2026-11-10 → ADR-VLT-015 (Laserfuchs LFD650-1-12, red, 1 mW, Class 2). The colour consequence (ball not red) moves to OQ-7.
 - **OQ-3** — Cube size (maximum amplitude, starting deflection, clamp envelope). — owner: System design — blocks: F-VLT-9 envelope values, the cube configuration.
 - **OQ-4** — Galvo set (ADR-VLT-015), mostly known from the listing (§6). Still open: (a) is the driver input single-ended or differential, and what is the connector; (b) is a ±12 V supply included; (c) is there a pattern/program board (F-VLT-19); (d) level matching — the DAC gives ≈ ±2.97 V of the ±5 V input (≈ 59 %), so ≈ ±8.9° optical at the standard setting. Choose between the driver's gain trim (up to ≈ ±17.8°), an amplifier stage (gain ≈ 1.7) on the converter board, or a larger galvo distance (NF-VLT-32, together with OQ-3); (e) measured angle per volt and step response on the delivered unit. — owner: Sensor and actuator modules (from the delivered board) — blocks: F-VLT-15, F-VLT-19, NF-VLT-32, NF-VLT-18 settling budget.
@@ -312,12 +322,12 @@ _Owners are sub-team roles; no names. Since rev 13 the open questions block only
 - **OQ-9** — resolved 2026-11-10 → ADR-VLT-005.
 - **OQ-10** — resolved 2026-11-10 → ADR-VLT-006.
 - **OQ-11** — resolved 2026-11-10 → ADR-VLT-007.
-- **OQ-12** — deadline classes resolved 2026-11-10 (ADR-VLT-008). Still open: maximum observation age, exposure-time skew, prediction horizon, target age, sync-status age, `fusion_period_ms` and the global granularity g (NF-VLT-24); conversion of the camera's exposure timestamp to the shared clock and rolling-shutter timing. — owner: System design (after OQ-1) — blocks: F-VLT-3/4/20/22/23, NF-VLT-24/27.
+- **OQ-12** — deadline classes resolved 2026-11-10 (ADR-VLT-008). ADR-VLT-021 proposes camera timing and validity limits (g = 2 ms, observation age ≤ 25 ms, skew ≤ 20 ms, horizon ≤ 30 ms). Hardware timestamp adapter qualification on the selected camera remains open. — owner: System design (after OQ-1) — blocks: F-VLT-3/4/20/22/23, NF-VLT-24/27.
 - **OQ-13** — resolved 2026-11-10: calibration procedure → ADR-VLT-012; cube frame and rest position defined in §2. Marker count and positions and the contents of the setup revision are design and move to the architecture (§11).
 - **OQ-15** — resolved 2026-11-10 → ADR-VLT-009.
 - **OQ-16** — resolved 2026-11-10 → ADR-VLT-010.
 - **OQ-17** — resolved 2026-11-10 → ADR-VLT-011.
-- **OQ-14** — degraded-mode part resolved 2026-11-10 (every camera pair must reach 80 %, NF-VLT-1). Still open: the tested operating envelope (ball size, maximum speed and acceleration — the prediction is generic, ADR-VLT-011 — lighting/exposure, expected occlusions, with OQ-3/OQ-7) and one combined error budget for detection, calibration, triangulation, timing/prediction and galvo placement against the ball radius; individually passing tests do not establish a combined bound. — owner: Requirements and product owner, with System design (before acceptance recording) — blocks: F-VLT-1 … F-VLT-5, NF-VLT-1/17/18/21.
+- **OQ-14** — degraded-mode part resolved 2026-11-10 (every camera pair must reach 80 %, NF-VLT-1). ADR-VLT-022 proposes the perception component allocation (≤ 10 mm p99) and reference qualification plan. Combined error budget confirmation and physical recordings remain open. — owner: Requirements and product owner, with System design (before acceptance recording) — blocks: F-VLT-1 … F-VLT-5, NF-VLT-1/17/18/21/35.
 
 ## 9. Artifact Interactions & Interferences
 
@@ -516,9 +526,101 @@ Additions from ADR-VLT-005/006: aiming-error and hit references derived with the
 
 Proposed shared metadata (F-VLT-24): file schema version, `setup_revision`, coordinate convention and units; camera files additionally bind `camera_id` and calibrated image mode (resolution/crop). Configuration defines the expected metadata; the setup revision changes when calibration or a relevant setup parameter changes. Physical changes are detected by the pose check (F-VLT-12) and the arming check (F-VLT-31), not by the setup revision.
 
+**Camera-team specifications and schema extensions (proposed, ADR-VLT-020/021/022)**
+
+- `camera-profile.json`: machine-readable parameters of the proposed VLT-CAM-1 profile (640 × 480, 80–120 fps, 1000 µs exposure, gain, validity limits, stage budgets).
+- `camera-observation.schema.json`: JSON schema defining the camera observation datagram (F-VLT-44).
+- `camera-calibration.schema.json`: JSON schema defining the CameraCalibration announcement datagram (F-VLT-44).
+- `camera-reference-plan.json`: reference data collection, annotation, and qualification plan (ADR-VLT-022).
+
 ## 11. Architecture & Vertical Slices
 
-open — after PM review
+_M3 architectural groundwork proposed by the camera team for consistency review (Gate 2). Interface contracts, transaction budgets, global time derivation, and integration verification plans._
+
+### 11.1 Interfaces and Messages
+
+The camera nodes interface with the control node over the dedicated Ethernet network using UDP unicast and UTF-8 JSON datagrams bounded to ≤ 1400 bytes (fitting within a single Ethernet MTU without IP fragmentation).
+
+#### Camera Observation Interface (`camera-observation.schema.json`)
+- **Transport & Encoding:** UDP unicast, JSON UTF-8, datagram size ≤ 1400 bytes.
+- **Rate:** 80–120 observations/s per camera node (nominal period 8.33–12.5 ms).
+- **Semantics:** State messages. Each datagram replaces the previous observation; older frames are dropped without buffering or retransmission.
+- **Sequence Arithmetic:** Within one session, sequence numbers wrap modulo 2^32. Sequence n is newer than last if and only if 0 < (n - last) mod 2^32 < 2^31.
+- **Identity & Validation:** Every datagram carries `camera_id` (0, 1, 2), `session_id` (sender instance UUID/string), `setup_revision` (hash of fixed installation and marker map), `image_profile` (`"VLT-CAM-1"`), and `calibration_id` (active calibration hash). Receivers reject mismatched setups, unknown calibrations, or non-finite numbers.
+- **Timestamps:** Timestamps in nanoseconds of the shared PTP clock are encoded on the wire as signed decimal strings. `t_exposure_ns` represents common frame-mid-exposure time; `t_ball_sample_ns` and `t_spot_sample_ns` preserve raw capture times for rolling-shutter row compensation.
+
+#### Camera Calibration Announcement (`camera-calibration.schema.json`)
+- **Transport & Encoding:** UDP unicast/broadcast, JSON UTF-8, datagram size ≤ 1400 bytes.
+- **Period:** Periodic announcement every 500 ms and immediately upon completing a calibration or rejoining the network.
+- **Content:** `camera_id`, `session_id`, `setup_revision`, `calibration_id`, camera matrix K (fx, fy, cx, cy), 5 distortion coefficients (k1, k2, p1, p2, k3), rotation matrix R (3x3), translation vector t (3 elements, mm), residual reprojection error (px, requirement ≤ 0.5 px), marker count, and timestamp.
+- **Adoption:** Control node validates the calibration prior to accepting observation data with matching `calibration_id`. A restarted camera validates and adopts a new `calibration_id` without invalidating the global setup hash for other tracking cameras.
+
+### 11.2 Real-Time Transactions & Five-Stage Budget Mapping
+
+Each distributed real-time transaction is assigned an owning role, an end-to-end deadline, and a five-stage budget split: **Input**, **Action**, **Transmission**, **Reception**, **Output**.
+
+#### Transaction T1: End-to-End Tracking
+- **Owner:** Sensor and actuator modules (camera nodes) & System design (control/galvo).
+- **Deadline:** Firm, p99 ≤ 30 ms (NF-VLT-18, ADR-VLT-008). Expired targets are discarded.
+- **Five-Stage Budget Mapping:**
+  The 9 detailed stages defined in ADR-VLT-021 map directly onto the 5 lecture DRS transaction stages:
+  1. **Input (6 ms):** Exposure midpoint through frame sensor readout on the camera node (ADR-VLT-021 stage: 6 ms).
+  2. **Action (16 ms total across nodes):**
+     - Camera detection of ball and spot (4 ms).
+     - Waiting for fixed fusion slot, including period grid jitter (11 ms).
+     - Fused 3D triangulation and motion prediction on control node (1 ms).
+  3. **Transmission (2 ms total across network):**
+     - Camera to control node via UDP unicast (1 ms).
+     - Control to galvo node via UDP unicast (1 ms).
+  4. **Reception (0.5 ms):** Galvo node receives target, validates epoch/bounds, and sets up interpolation buffer (0.5 ms; absorbed into output allocation).
+  5. **Output (5.5 ms total including reserve):**
+     - Galvo output / I2S DAC DMA buffer conversion (2 ms).
+     - Galvo mirror physical step response and settling time (1 ms).
+     - Design timing margin / reserve (2.5 ms).
+  - **Total:** 6 ms + 16 ms + 2 ms + 0.5 ms + 5.5 ms = 30 ms.
+
+#### Transaction T2: Target-Loss Laser Shutdown
+- **Owner:** Sensor and actuator modules (galvo node).
+- **Deadline:** Hard, ≤ 110 ms (100 ms timeout + 10 ms margin, NF-VLT-26).
+- **Stage Split:** Input: 0 ms (timer expiry). Action: 1 ms (timeout detection task). Transmission: 0 ms (local). Reception: 0 ms. Output: ≤ 10 ms (GPIO / power supply cutoff).
+
+#### Transaction T3: Unsafe-Condition Laser Shutdown
+- **Owner:** System design (control node) & Sensor and actuator modules (galvo node).
+- **Deadline:** Hard, ≤ 100 ms from first frame exposure demonstrating unsafe state (< 2 cameras, sync loss, safety alarm, or kill-switch press).
+- **Stage Split:** Input: 6 ms (exposure/capture). Action: 5 ms (detection & condition check). Transmission: 1 ms (safe state command). Reception: 1 ms. Output: ≤ 10 ms (galvo laser-off trigger). Total well within 100 ms.
+
+#### Transaction T5: Camera Reintegration
+- **Owner:** Sensor and actuator modules (camera sub-team).
+- **Deadline:** Soft / no hard deadline (NF-VLT-26).
+- **Stage Split:** Input: reboot/restart completion. Action: PTP clock synchronization (≤ 0.5 ms to grandmaster), automatic calibration from frame markers (≤ 10 s). Transmission: `CameraCalibration` announcement every 500 ms. Reception: control node validates calibration and integrates camera into 3-camera tracking.
+
+### 11.3 Global Time Base & Granularity Derivation
+
+- **Required Precision (π):** Pairwise clock offset between any two nodes must satisfy π ≤ 1.0 ms (NF-VLT-5, NF-VLT-24). Each node synchronizes to the PTP grandmaster (control node) within π/2 ≤ 0.5 ms.
+- **Granularity Derivation (g):**
+  Per lecture principle ([L] p. 97), the global granularity g must satisfy the **reasonableness condition**:
+  g > π
+  Given π = 1.0 ms, the smallest integer millisecond granularity satisfying this condition is:
+  g = 2.0 ms
+  Consequently, event order across different nodes can only be unambiguously determined if the timestamps differ by more than:
+  Δt > 2g = 4.0 ms
+- **Camera Exposure Time Alignment:** The camera exposure timestamp adapter must map the optical frame-mid-exposure time into the shared clock with mapping error ≤ 0.5 ms. Rolling-shutter cameras perform row-time compensation relative to the midpoint.
+
+### 11.4 Integration Verification & Fault Injection Plan
+
+For each transaction involving the camera nodes, end-to-end timing and fault resilience must be verified on hardware:
+1. **End-to-End Timing Measurement:** An external trigger (pulsed LED flash) in the camera field of view is timed by an independent oscilloscope / logic analyzer (NF-VLT-29). The time from LED emission to camera observation transmission is measured over ≥ 100 samples to establish p99 latency against the allocated budget.
+2. **Schema & Contract Fault Injection:**
+   - Inject corrupted JSON syntax, unknown `schema_version`, missing fields, and payloads exceeding 1400 bytes; verify that receiving nodes reject them immediately without crash or memory growth.
+   - Inject non-finite (`NaN`, `+Inf`, `-Inf`) image coordinates; verify drop and diagnostic logging.
+   - Inject wrapped and out-of-order sequence numbers; verify monotonic progression within session.
+3. **Camera Failure & Degraded Mode Injection:**
+   - Unplug camera Ethernet cable during tracking: control node detects observation age > 25 ms within 100 ms, transitions from 3-camera tracking to degraded 2-camera mode, and tracking continues without laser interruption.
+   - Unplug second camera: control node detects < 2 delivering cameras, triggers laser shutdown within 100 ms (T3), and latches safe state.
+4. **Clock Fault Injection:**
+   - Introduce an intentional 50 ms clock step or suppress PTP sync packets on a camera node; verify that `synced` flag becomes `false`, the camera's observations are excluded by the control node within 100 ms, and diagnostic is logged.
+5. **Camera Movement Injection:**
+   - Mechanically displace a calibrated camera during tracking; verify that marker reprojection check detects error > 2 px within 1 s (F-VLT-12), marks the camera absent, and enters degraded mode.
 
 ## 12. Architecture Consistency Review
 

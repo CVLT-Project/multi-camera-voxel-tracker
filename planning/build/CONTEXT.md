@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 13
+revision: 14
 created: 2026-11-02T15:28
-updated: 2026-11-10T00:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@14
+updated: 2026-11-12T11:00
+input: VLT/10-intake.md@2, VLT/20-concept.md@16
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -60,6 +60,9 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | operating mode | start, calibrating galvo, ready, arming check, tracking (normal / degraded), safe (latched or not) (F-VLT-41) | `Mode` | VLT | proposed — Gate 1 pending |
 | reaction matrix | per error: detection, reaction, time limit, log (NF-VLT-34) | — | VLT | proposed — Gate 1 pending |
 | hit radius | obsolete 2026-11-10 — replaced by the ball's image disc (ADR-VLT-005) | `hit_radius_mm` | VLT | obsolete |
+| VLT-CAM-1 | camera acquisition profile: 640 × 480 px, 80–120 fps, 1000 µs nominal exposure, locked AWB/gain (F-VLT-43, ADR-VLT-020) | `VLT-CAM-1` | VLT | proposed — M3 review pending |
+| camera calibration ID | unique hash identifying one camera node's active calibration result announced via CameraCalibration (F-VLT-44) | `calibration_id` | VLT | proposed — M3 review pending |
+| global granularity | g = 2 ms, granularity of the global time base satisfying g > π (NF-VLT-24, ADR-VLT-021) | `global_granularity_ms` | VLT | proposed — M3 review pending |
 
 ## Naming rules
 
