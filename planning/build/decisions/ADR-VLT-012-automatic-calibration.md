@@ -25,6 +25,8 @@ Repeated setup tests need calibration in seconds, not a manual session. The spot
 - The automatic galvo scan depends on the spot being visible on floor and walls; the background choice (OQ-7) must allow it.
 - The marker map (marker IDs and cube coordinates) becomes a setup file under F-VLT-24; the conventions themselves remain OQ-13.
 
+**Observation-loss clarification (ADR-VLT-019, 2026-11-12):** during a galvo scan or arming check, loss of the measurable spot follows F-VLT-42 (500 ms + ≤ 100 ms to laser off): the scan or check fails and the existing bounded retry applies. A valid ball state is not required to triangulate calibration spots.
+
 ## Traces to
 
 F-VLT-3, F-VLT-5, F-VLT-8, F-VLT-12, F-VLT-13, F-VLT-24, F-VLT-31, F-VLT-35, OQ-7, OQ-13

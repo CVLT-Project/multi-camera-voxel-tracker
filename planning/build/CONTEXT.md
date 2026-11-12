@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 13
+revision: 14
 created: 2026-11-02T15:28
-updated: 2026-11-10T00:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@14
+updated: 2026-11-12T12:00
+input: VLT/10-intake.md@2, VLT/20-concept.md@16
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -43,7 +43,7 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | grandmaster | the node whose clock all others follow by PTP; proposed: the control node (NF-VLT-24) | `grandmaster` | VLT | proposed — PM review pending |
 | ground state | the defined state a node starts in: laser off, converter at centre, unarmed, no history (F-VLT-28) | `GROUND` | VLT | proposed — PM review pending |
 | state message | a message whose newest valid copy replaces the previous one; never queued or retransmitted (NF-VLT-27) | — | VLT | proposed — PM review pending |
-| transaction | an end-to-end real-time chain with its deadline class: T1 tracking (firm), T2 target-loss shutdown (hard), T3 unsafe-condition shutdown (hard), T4 monitoring (soft), T5 camera reintegration (no deadline) (NF-VLT-26, ADR-VLT-008) | `T1` … `T5` | VLT | active |
+| transaction | an end-to-end real-time chain with its deadline class: T1 tracking (firm), T2 target-loss shutdown (hard), T3 unsafe-condition shutdown (hard), T4 monitoring (soft), T5 camera reintegration (no deadline), T6 effect supervision (hard, 500 ms + 100 ms), T7 galvo software hang (hard, 1 s) (NF-VLT-26, ADR-VLT-008/018) | `T1` … `T7` | VLT | active |
 | camera status | per camera: absent, unsynced, ball not seen, ball seen (F-VLT-11) | `CameraStatus` | VLT | active |
 | marker map | ArUco marker IDs on the cube frame with their measured cube coordinates; the reference for camera calibration (ADR-VLT-012) | `marker_map` | VLT | active |
 | galvo scan | the automatic galvo calibration: grid projected onto floor and walls, measured by the cameras; started by the control node when no valid calibration exists or the arming check fails (F-VLT-13, ADR-VLT-013) | `galvo_scan` | VLT | active |
@@ -58,6 +58,7 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | arming button | obsolete 2026-11-10 — removed; arming is done by the control node software (ADR-VLT-013) | — | VLT | obsolete |
 | release | start of a run: the ball, held still > 100 mm from rest, starts moving towards rest (F-VLT-7) | `release` | VLT | proposed — Gate 1 pending |
 | operating mode | start, calibrating galvo, ready, arming check, tracking (normal / degraded), safe (latched or not) (F-VLT-41) | `Mode` | VLT | proposed — Gate 1 pending |
+| optical-effect watchdog | while the laser is on, a measurable spot must be seen within 500 ms and then every 500 ms; on expiry the laser is off within 100 ms (F-VLT-42, ADR-VLT-019) | — | VLT | proposed — Gate 1 pending |
 | reaction matrix | per error: detection, reaction, time limit, log (NF-VLT-34) | — | VLT | proposed — Gate 1 pending |
 | hit radius | obsolete 2026-11-10 — replaced by the ball's image disc (ADR-VLT-005) | `hit_radius_mm` | VLT | obsolete |
 
