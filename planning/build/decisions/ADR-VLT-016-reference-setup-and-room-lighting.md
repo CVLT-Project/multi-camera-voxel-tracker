@@ -2,7 +2,7 @@
 
 - **Status:** proposed · 2026-11-12 · M3 groundwork from the camera-team review; decided as a team in the M3 consistency review (Gate 2). Construction and measurements pending.
 - **Feature:** VLT
-- **Would resolve (if accepted):** OQ-3, OQ-7 (colour/background choice), OQ-14 (operating-envelope definition). Camera model/driver binding and optical/timing verification remain pending; numerical settings and error budget are selected by ADR-VLT-020/021/022.
+- **Would resolve (if accepted):** OQ-3, OQ-7 (colour/background choice). The operating envelope (release 100 … 300 mm, ≤ 1000 mm/s, ≤ 4000 mm/s², ordinary room lighting) is no longer part of this proposal: it is a requirement in NF-VLT-1 since 2026-11-12, and the values below match it. Camera model/driver binding and optical/timing verification remain pending; numerical settings and error budget are selected by ADR-VLT-020/021/022.
 
 ## Context
 
@@ -90,7 +90,7 @@ An 800 mm cube contains the 50 mm ball and 300 mm deflection with clearance. A m
 
 - OQ-3 is resolved as a design choice; as-built measurements are still required.
 - OQ-7's colour/background choice is resolved, with camera-dependent visibility validation pending. No lighting-extreme acceptance requirement is added.
-- OQ-14 has numerical physical/motion bounds, with selected exposure/error policies and real performance still unverified.
+- The motion bounds are fixed by NF-VLT-1 (2026-11-12); OQ-14 keeps only the combined error budget (ADR-VLT-022). Exposure/error policies and real performance remain unverified.
 - OQ-1 camera model/binding and delivered-hardware checks in OQ-4 remain open; OQ-12 numeric policy is resolved by ADR-VLT-021.
 - `cube_size_mm` defaults to {x: 800, y: 800, z: 800}. Nominal rest centre (400, 400, 300) is replaced by the hand measurement. Marker/mount layout is defined; software architecture and Gate 1 remain pending.
 

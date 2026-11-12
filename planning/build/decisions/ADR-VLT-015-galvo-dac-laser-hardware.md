@@ -1,11 +1,11 @@
-# ADR-VLT-015 — Galvo, DAC and laser hardware; converter link faults detected by effect monitoring
+# ADR-VLT-015 — Given galvo, DAC and laser hardware; converter link faults detected by effect monitoring
 
-- **Status:** accepted · 2026-11-10 · decided by the team (hardware selection) · resolves OQ-2 and OQ-5 · effect-monitoring scope amended by ADR-VLT-018/019
+- **Status:** accepted · 2026-11-10 · given hardware, recorded 2026-11-10 (the team could not choose it); the link-fault policy is decided by the team · resolves OQ-2 and OQ-5 · wording corrected 2026-11-12 (was "hardware selection") · effect-monitoring scope amended by ADR-VLT-018/019
 - **Feature:** VLT
 
 ## Context
 
-OQ-2 (laser) and OQ-5 (converter board) were open. OQ-4 (galvo input) is still open. The team has now selected the hardware.
+OQ-2 (laser) and OQ-5 (converter board) were open. OQ-4 (galvo input) is still open. The hardware was given to the team; this record documents its facts.
 
 ## Decision
 
@@ -32,7 +32,7 @@ OQ-2 (laser) and OQ-5 (converter board) were open. OQ-4 (galvo input) is still o
 
 ## Rationale
 
-The parts are cheap and available, and a Pi 3 drives I2S natively. A read-back ADC would add hardware and code. The chosen effect-monitoring policy covers qualifying observable deviations and observation loss; it does not establish detection of every electrical link fault. The selected laser class and cube limits remain unchanged.
+The hardware is given to the team and could not be chosen, so it is a requirement ([L] p. 287); this record only documents its facts. The team's own decision is how converter link faults are detected: the DAC has no read-back, and a read-back ADC would add hardware and code. The effect-monitoring policy covers qualifying observable deviations and observation loss; it does not establish detection of every electrical link fault. The given laser class and the cube limits remain unchanged.
 
 ## Consequences
 
