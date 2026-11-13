@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 26
+revision: 27
 created: 2026-11-02T15:27
-updated: 2026-11-12T19:00
+updated: 2026-11-12T20:15
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -44,7 +44,7 @@ register: —
 
 | Gate | MANIFEST | When | Decision | By | Date | Rationale / accepted items |
 | --- | --- | --- | --- | --- | --- | --- |
-| PM review | Phase 4 | after concept §3–§10, before architecture | pending | | | sponsor decisions applied (NF-VLT-4, U-VLT-3 dropped; F-VLT-14 optional); reference data set in rev 3; focused requirements review in rev 4 proposes F-VLT-22 … F-VLT-24, NF-VLT-22 and OQ-9 … OQ-14; DRS completeness review in rev 5 proposes F-VLT-25 … F-VLT-29, NF-VLT-23 … NF-VLT-29, OQ-15/16 and corrects F-VLT-8/16/18/20 — requirements not yet approved |
+| PM review | Phase 4 | after concept §3–§10, before architecture | approved | Ralf Hintersteininger (sponsor), with the team | 2026-11-12 | requirements of concept rev 22 approved as written (Gate 1), incl. all requirements marked "proposed — PM review pending" / "Gate 1 pending". Accepted as open into the architecture (decided at Gate 2): OQ-3, OQ-4, OQ-7, OQ-12, OQ-14 (each with a proposal) and risk R-1 (camera mode vs. NF-VLT-18). Not part of this approval: the requirement change requests in §11 (ADR-VLT-017/020/021/022) — each needs its own team decision |
 | Consistency review | Phase 6 | after architecture, before synthesis | pending | | | |
 | Gap analysis | Phase 9 | after the last slice | pending | | | |
 
@@ -85,12 +85,13 @@ register: —
 | 2026-11-12 | VLT | concept | report review | consistency fixes for the M2 report (rev 20): galvo, DAC and laser recorded as given hardware (ADR-VLT-015); open-question limits marked as architecture values with the requirements that need them; F-VLT-42 → ADR-VLT-018/019; F-VLT-14 row, reaction-matrix camera row, checklist row 18 and duplicate T1/π wording corrected; no requirement changes meaning. |
 | 2026-11-12 | VLT | concept | start-up and envelope | rev 21, on user instruction: F-VLT-28 allows the start-up galvo scan (conflict with F-VLT-13 resolved); operating envelope from the OQ-14 proposal fixed in NF-VLT-1 (release 100 … 300 mm, ≤ 1000 mm/s, ≤ 4000 mm/s²); risk R-1 (camera mode vs. 30 ms) recorded in §8. |
 | 2026-11-12 | VLT | concept | review follow-up | NF-VLT-1 lowest release ≈ 120 mm (F-VLT-7 threshold), room lighting defined and recorded; F-VLT-28 failure path and second-scan case; ADR-VLT-016 no longer claims the operating envelope (now NF-VLT-1). |
+| 2026-11-12 20:15 | VLT | concept | Gate 1 approved | PM review (MANIFEST Phase 4) passed on concept rev 22: requirements approved by the sponsor with the team; open questions OQ-3/4/7/12/14 and risk R-1 carried into the architecture; §11 change requests not approved with it. Architecture (second half of the concept) may start. |
 
 ## Open items for the Director
 
-- Gate 1 (team approval of the requirements) pending for VLT (concept rev 16, after the effect-supervision corrections); report rules and lecture checklist applied at rev 13. Earlier: PM review pending for VLT (concept rev 8) — sponsor answers in ADR-VLT-005 … 012; open: OQ-1 … OQ-5, OQ-7, OQ-12 (numeric limits), OQ-14 (envelope, error budget). rev 8 adds proposed debugging requirements (U-VLT-4/5, F-VLT-32/33, NF-VLT-31). rev 5 added the DRS completeness review: 12 proposed requirements, 4 in-place corrections, OQ-15/16; 16 open questions in total. Earlier note for rev 4: — sponsor has not approved the requirements yet. Four proposed requirements and six new clarification topics are ready for team discussion; 14 open questions in total. Next design question once approved: programming language of the nodes (Python / C++ / mixed).
-- OQ-1 (camera model) is critical for NF-VLT-18 (30 ms deadline).
-- Discuss OQ-9/OQ-10 first (measurable aiming error and unbiased run scoring), then OQ-11/OQ-12 (recovery and temporal validity); OQ-13/OQ-14 cover calibration conventions and the acceptance envelope. These are unresolved decisions, not new approved scope.
+- Gate 1 approved 2026-11-12 (concept rev 22). Next: the concept author flips the "proposed — PM review pending / Gate 1 pending" markers in the concept and `CONTEXT.md` to approved, then continues with the architecture (§11, M3) and the consistency review (§12, Gate 2).
+- Before or with Gate 2: team decisions on the §11 requirement change requests (ADR-VLT-017/020/021/022); answers to OQ-3/4/7/12/14; bench check of R-1 (camera mode vs. NF-VLT-18 30 ms).
+- Design question still to settle in the architecture: programming language of the nodes (Python / C++ / mixed).
 
 ## Notes (human)
 
