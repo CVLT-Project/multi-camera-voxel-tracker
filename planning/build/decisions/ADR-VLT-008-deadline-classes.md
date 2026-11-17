@@ -22,3 +22,7 @@ NF-VLT-18 and NF-VLT-26 are aligned; OQ-12 is reduced to numeric limits and time
 ## Traces to
 
 NF-VLT-18, NF-VLT-26, F-VLT-10, F-VLT-22, NF-VLT-29
+
+## Amendment 2026-11-17 — transaction review (approved by the sponsor)
+
+T1 is measured from the physical change of the ball's motion, firm, p99 ≤ 45 ms (was 30 ms from the exposure). Transactions are only T1, T3 (physical conditions), T6 (F-VLT-26) and T8 kill switch (firm, 100 ms to the safe state). Target loss (was T2), local galvo faults, galvo hang (was T7), no measurable spot (F-VLT-42) and camera data loss are fault reactions with the same hard deadlines; camera reintegration (was T5) is a mode activity; monitoring (was T4) is no transaction. See NF-VLT-18, NF-VLT-26, concept §11.2.

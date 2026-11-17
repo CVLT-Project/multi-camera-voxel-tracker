@@ -35,3 +35,7 @@ Independent instruments verify T2/T3/T6/T7 against their stated origins. At leas
 ## Traces to
 
 F-VLT-10/15/16/21/25/26/42, NF-VLT-23/26/29/30/34, ADR-VLT-008/010/015/019
+
+## Amendment 2026-11-17 — transaction review (approved by the sponsor)
+
+Origins follow the lecture's transaction model: T3 and T6 run from the physical event (not from the first exposure showing it); F-VLT-42 runs from the exposure time of the last good measurement or the first laser-on placement. T7 is now the fault reaction *galvo hang* (1 s), the locally detected part of T3 the fault reaction *local galvo faults* (100 ms). Both F-VLT-26 and F-VLT-42 are decided at the first fusion step after expiry; a measurement still in flight does not cancel them. See NF-VLT-26, concept §11.2.

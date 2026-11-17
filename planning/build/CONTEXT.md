@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 17
+revision: 21
 created: 2026-11-02T15:28
-updated: 2026-11-12T14:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@22
+updated: 2026-11-17T17:00
+input: VLT/10-intake.md@2, VLT/20-concept.md@26
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -37,34 +37,43 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | reference data set | recorded, annotated frames of all cameras that the automated tests run against | `reference_data` | VLT | active |
 | monitoring laptop | observe-only sink for monitoring data; required to operate the demo and the only status display (F-VLT-40) | `monitor` | VLT | active |
 | kill switch | physical switch cutting the laser supply independent of software; the operator's only physical control: press = disarm, release = re-arming allowed (ADR-VLT-013) | — | VLT | active |
-| restart session | one sender-process incarnation; sequence numbers are interpreted within it, preventing pre-restart messages from becoming current again (F-VLT-23) | `session_id` | VLT | proposed — PM review pending |
-| setup revision | identity of the installation configuration and calibration set that communicating nodes must agree on (F-VLT-24) | `setup_revision` | VLT | proposed — PM review pending |
-| galvo status | the galvo node's report to the control node: actual laser state with reason, applied target, galvo restart session (F-VLT-25) | `GalvoStatus` | VLT | proposed — PM review pending |
-| grandmaster | the node whose clock all others follow by PTP; proposed: the control node (NF-VLT-24) | `grandmaster` | VLT | proposed — PM review pending |
-| ground state | the defined state a node starts in: laser off, converter at centre, unarmed, no history (F-VLT-28) | `GROUND` | VLT | proposed — PM review pending |
-| state message | a message whose newest valid copy replaces the previous one; never queued or retransmitted (NF-VLT-27) | — | VLT | proposed — PM review pending |
-| transaction | an end-to-end real-time chain with its deadline class: T1 tracking (firm), T2 target-loss shutdown (hard), T3 unsafe-condition shutdown (hard), T4 monitoring (soft), T5 camera reintegration (no deadline), T6 effect supervision (hard, 500 ms + 100 ms), T7 galvo software hang (hard, 1 s) (NF-VLT-26, ADR-VLT-008/018) | `T1` … `T7` | VLT | active |
+| restart session | one sender-process incarnation; sequence numbers are interpreted within it, preventing pre-restart messages from becoming current again (F-VLT-23) | `session_id` | VLT | active |
+| setup revision | identity of the installation configuration and calibration set that communicating nodes must agree on (F-VLT-24) | `setup_revision` | VLT | active |
+| galvo status | the galvo node's report to the control node: actual laser state with reason, applied target, galvo restart session (F-VLT-25) | `GalvoStatus` | VLT | active |
+| grandmaster | the node whose clock all others follow by PTP; proposed: the control node (NF-VLT-24) | `grandmaster` | VLT | active |
+| ground state | the defined state a node starts in: laser off, converter at centre, unarmed, no history (F-VLT-28) | `GROUND` | VLT | active |
+| state message | a message whose newest valid copy replaces the previous one; never queued or retransmitted (NF-VLT-27) | — | VLT | active |
+| transaction | a causal chain from a physical stimulus through input, action, transmission, reception and output to a physical effect, with an end-to-end deadline from the stimulus ([L] p. 36–40, 292–299): T1 tracking (firm, 45 ms), T3 unsafe-condition shutdown (hard, 100 ms), T6 effect supervision (hard, 600 ms), T8 kill switch (firm, 100 ms). Since 2026-11-17 T2, T4, T5 and T7 are no transactions (see fault reaction, mode activity) | `T1`, `T3`, `T6`, `T8` | VLT | active |
 | camera status | per camera: absent, unsynced, ball not seen, ball seen (F-VLT-11) | `CameraStatus` | VLT | active |
 | marker map | ArUco marker IDs on the cube frame with their measured cube coordinates; the reference for camera calibration (ADR-VLT-012) | `marker_map` | VLT | active |
 | galvo scan | the automatic galvo calibration: grid projected onto floor and walls, measured by the cameras; started by the control node when no valid calibration exists or the arming check fails (F-VLT-13, ADR-VLT-013) | `galvo_scan` | VLT | active |
 | arming check | 3 projected check points measured before every arming (F-VLT-31) | `arming_check` | VLT | active |
-| health overview | the monitoring screen with per-node values, limits and highlighting (F-VLT-37) | `health` | VLT | proposed — PM review pending |
-| chain delay statistics | per-stage and end-to-end delay of the tracking chain with min, max, mean, jitter, percentiles over last second, run and session (F-VLT-39) | `ChainStats` | VLT | proposed — PM review pending |
-| session recording | bounded, image-free recording of the loop's inputs and decisions, replayable offline (F-VLT-32) | `session_recording` | VLT | proposed — PM review pending |
-| dry run | configured mode with laser disabled or galvo disabled (F-VLT-33) | `dry_run` | VLT | proposed — PM review pending |
+| health overview | the monitoring screen with per-node values, limits and highlighting (F-VLT-37) | `health` | VLT | active |
+| chain delay statistics | per-stage and end-to-end delay of the tracking chain with min, max, mean, jitter, percentiles over last second, run and session (F-VLT-39) | `ChainStats` | VLT | active |
+| session recording | bounded, image-free recording of the loop's inputs and decisions, replayable offline (F-VLT-32) | `session_recording` | VLT | active |
+| dry run | configured mode with laser disabled or galvo disabled (F-VLT-33) | `dry_run` | VLT | active |
 | fusion slot | one period of the fixed-rate fusion, aligned to the shared clock (ADR-VLT-009) | `FusionSlot` | VLT | active |
 | arming epoch | counter incremented at every arming; after a safety fault the galvo node needs a newer one (ADR-VLT-007) | `arm_epoch` | VLT | active |
-| safety latch | safe state that persists after an alarm or repeated safety faults until the kill switch is pressed and released (F-VLT-21) | `safety_latch` | VLT | proposed — PM review pending |
+| safety latch | safe state that persists after an alarm or repeated safety faults until the kill switch is pressed and released (F-VLT-21) | `safety_latch` | VLT | active |
 | arming button | obsolete 2026-11-10 — removed; arming is done by the control node software (ADR-VLT-013) | — | VLT | obsolete |
-| release | start of a run: the ball, held still > 100 mm from rest, starts moving towards rest (F-VLT-7) | `release` | VLT | proposed — Gate 1 pending |
-| operating mode | start, calibrating galvo, ready, arming check, tracking (normal / degraded), safe (latched or not) (F-VLT-41) | `Mode` | VLT | proposed — Gate 1 pending |
-| optical-effect watchdog | while the laser is on, a measurable spot must be seen within 500 ms and then every 500 ms; on expiry the laser is off within 100 ms (F-VLT-42, ADR-VLT-019) | — | VLT | proposed — Gate 1 pending |
+| release | start of a run: the ball, held still > 100 mm from rest, starts moving towards rest (F-VLT-7) | `release` | VLT | active |
+| operating mode | start, calibrating galvo, ready, arming check, tracking (normal / degraded), safe (latched or not) (F-VLT-41) | `Mode` | VLT | active |
+| optical-effect watchdog | while the laser is on, a measurable spot must be seen within 500 ms and then every 500 ms; on expiry the laser is off within 100 ms (F-VLT-42, ADR-VLT-019) | — | VLT | active |
 | reference installation | proposed physical baseline: 800 mm cube, nominal rest centre (400, 400, 300) mm, white ball, grey floor and far walls, two elevated side views and an offset overhead view (ADR-VLT-016) | — | VLT | proposed — Gate 2 |
 | camera profile | VLT-CAM-1: 640 × 480, 80–120 fps, startup exposure then locked, timestamp mapping and rectification (ADR-VLT-020); camera model not selected | `profile_id` | VLT | proposed — Gate 2 |
 | calibration identity | per-camera hash of a validated calibration result, separate from the installation identity `setup_revision` (ADR-VLT-020) | `calibration_id` | VLT | proposed — Gate 2 |
 | startup preparation | laser-off Start phase, separate from galvo scan attempts (ADR-VLT-017) | — | VLT | proposed — change request after Gate 1 |
-| reaction matrix | per error: detection, reaction, time limit, log (NF-VLT-34) | — | VLT | proposed — Gate 1 pending |
+| reaction matrix | per error: detection, reaction, time limit, log (NF-VLT-34) | — | VLT | active |
 | hit radius | obsolete 2026-11-10 — replaced by the ball's image disc (ADR-VLT-005) | `hit_radius_mm` | VLT | obsolete |
+| target purpose | what a Target is for: TRACK, SCAN (galvo scan), CHECK (arming check) or IDLE (laser off, keeps the galvo timeout fed) | `Purpose` | VLT (architecture, rev 24) | proposed — Gate 2 |
+| laser guard | the galvo-node process that alone drives the laser-enable output and reads the kill switch; it switches the laser off when the output loop stops beating | `LaserGuard` | VLT (architecture, rev 24) | proposed — Gate 2 |
+| blocked epoch | the newest arming epoch the galvo node refuses to switch the laser on for, after a local safety fault or a new control session | `blocked_epoch` | VLT (architecture, rev 24) | proposed — Gate 2 |
+| camera status | per camera at each fusion slot: absent, unsynced, present without ball, present with ball (F-VLT-11) | `CamStatus` | VLT (architecture, rev 24) | proposed — Gate 2 |
+| node simulator | a program that replaces a whole node at the network boundary and speaks the real protocol; the "camera simulator", "galvo simulator" and "control simulator" of NF-VLT-31 are node simulators | `CameraNodeSim`, `GalvoNodeSim`, `ControlNodeSim` (`sim/`) | VLT (architecture, rev 25) | proposed — Gate 2 |
+| hardware simulator | a class with the interface of one hardware driver, used inside a real node instead of the hardware; lives in the folder of that node | `Sim<Driver>`: `SimFrameSource` (`camera/`), `SimOutputStream`, `SimGpio`, `SimWatchdog` (`galvo/`), `SimClock` (`common/`) | VLT (architecture, rev 25) | proposed — Gate 2 |
+| scenario | the ground truth both camera simulators read: ball trajectory, laser state, spot, calibrations | `Scenario` (`sim/`) | VLT (architecture, rev 25) | proposed — Gate 2 |
+| fault reaction | the detection of a fault and the system's reaction, with its own origin and deadline, but no physical stimulus-to-effect chain: target loss, local galvo faults, galvo hang, no measurable spot, camera data loss (NF-VLT-26) | — | VLT (transaction review, rev 26) | active |
+| mode activity | a procedure inside an operating mode with a time limit: camera reintegration, arming check, galvo scan (NF-VLT-26) | — | VLT (transaction review, rev 26) | active |
 
 ## Naming rules
 
