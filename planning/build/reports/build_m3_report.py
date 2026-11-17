@@ -97,7 +97,8 @@ def modules(text: str):
     code = tree.split("```")[1]
     node, out = None, []
     names = {"common/": "all nodes (shared)", "camera/": "camera node", "control/": "control node",
-             "galvo/": "galvo node", "monitor/": "monitoring laptop", "sim/": "test tools"}
+             "galvo/": "galvo node", "monitor/": "monitoring laptop", "sim/": "test tools",
+             "bench/": "test bench (laptop)"}
     for line in code.splitlines():
         m = re.match(r"^  (\w+/)\s", line)
         if m:
@@ -303,7 +304,7 @@ def build() -> str:
 #v(25mm)
 #block(width: 100%, inset: 8pt, stroke: 0.8pt)[{gate_box}]
 #v(1fr)
-#text(size: 8.5pt, fill: luma(70))[{esc(m2.LECTURE)} Requirement IDs (F-VLT-n, NF-VLT-n) refer to the requirements approved at Gate 1 (milestone M2) and amended by the transaction review of 17 November 2026; decision IDs are ADR-VLT-n. Owners are sub-team roles: system design, sensor and actuator modules, integration support.]
+#text(size: 8.5pt, fill: luma(70))[{esc(m2.LECTURE)} Requirement IDs (F-VLT-n, NF-VLT-n) refer to the requirements approved at Gate 1 (milestone M2) and amended by the transaction review of 17 November 2026; decision IDs are ADR-VLT-n. Owners are sub-team roles: camera team, control team, laser team.]
 #pagebreak()
 #outline(depth: 2, indent: auto)
 #pagebreak()
@@ -462,8 +463,10 @@ def build() -> str:
     if tail:
         a("\n" + md(clean(tail[0])) + "\n")
     a("\n" + md("**Instruments.** The end-to-end durations are measured independently of the node clocks (NF-VLT-29): a "
-                "separate microcontroller fires an LED in the cameras' view at random phase to the frames and timestamps "
-                "it, and a photodiode at the galvo output (or on the ball) timestamps the effect on the same instrument. "
+                "logic analyzer records a GPIO trace pin of every node, the laser-enable line and the kill-switch contact. "
+                "It covers the electrical part of each chain; there is no optical stimulus or sensor, so the input stage "
+                "and the physical output (mirror settling, laser switch-off) are taken from the node timestamps and the "
+                "stage budgets. "
                 "Each node also logs its per-stage timestamps, so every stage is checked against its budget (NF-VLT-18, "
                 "NF-VLT-33). Fault injection uses cable pulls, SIGSTOP, clock steps, a second laser pointer, blocked "
                 "mirrors and calibration offsets as listed.") + "\n")
@@ -503,7 +506,7 @@ def build() -> str:
         ["A-2", "The on-chip watchdog backstop for a galvo hang has no reserve: its minimum timeout of 1 s equals the deadline (NF-VLT-30).",
          "accepted", "The laser guard switches the laser off ≈ 29 ms after an output-loop stall; the watchdog only covers a stall of the laser guard or the kernel."],
         ["A-3", "The laser switch-off delay (supply switch and laser decay) is not measured; it sets the 8 ms output stage and F-VLT-16's action-delay window. Target loss has only 0.5 ms slack.",
-         "deferred", "Measured with the photodiode in build increment S3; default 8 ms until then."],
+         "deferred", "Estimated from the datasheets of the supply switch and the laser module (default 8 ms); there is no optical measurement."],
         ["A-4", "Message fields needed by the design were missing (stage timestamps, purpose, session, setup, sync state) (F-VLT-23, F-VLT-24, F-VLT-39).",
          "fixed", "Added to the message specification (Section 4)."],
         ["A-5", "No camera mode is confirmed that gives both the field of view of the layout and ≥ 80 fps (risk R-1, NF-VLT-18, NF-VLT-32).",

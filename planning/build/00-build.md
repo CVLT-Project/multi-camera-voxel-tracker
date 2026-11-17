@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 34
+revision: 37
 created: 2026-11-02T15:27
-updated: 2026-11-17T18:30
+updated: 2026-11-17T21:00
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 28 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 31 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -96,6 +96,10 @@ register: —
 | 2026-11-17 18:00 | VLT | concept | design detail | user request: MonitorMessage images base64-encoded in JSON (`jpeg_b64`, ≤ 40 kB encoded); network budget updated; concept rev 27 |
 | 2026-11-17 18:30 | VLT | concept | design detail | user request: §11.1 states that all node messages are JSON and gives one JSON example per message (shown in the M3 report under each field table); `type` field in every message; `setup_revision` = full SHA-256 as in the schema; concept rev 28 |
 | 2026-11-17 18:40 | VLT | concept | wip_commit | user request: commit concept rev 28 and the M3 report, push and merge into main |
+| 2026-11-17 20:00 | VLT | concept | team decisions | integration test debugging concept (M3), §11.7: monitor as main tool with mirror stream, plausibility checks and incident list (laptop optional, nothing waits); Saleae Logic 8 with wiring profiles A/B, LED blinker, photodiode, trace pins; Replay as referee for timing vs functional; FaultInjector in the test profile only; S7 right after S1; owners: control team (monitor, recorder, replay), laser team (bench), camera team (reference data), fault injection to the first team done; roles = camera/control/laser team; ADR-VLT-024; concept rev 29, CONTEXT rev 22 |
+| 2026-11-17 20:30 | VLT | concept | user decision | LED blinker and photodiode removed from the debugging bench (§11.7): wiring profiles carry laser enable, kill switch and trace pins only; input stage and physical output not measured independently; §11.2/§11.4/§11.6 still name them (open); concept rev 30 |
+| 2026-11-17 21:00 | VLT | concept | user decision | LED and photodiode removed everywhere (requirement wording approved): NF-VLT-29 example, acceptance of F-VLT-42, NF-VLT-5/16/18/25/30, §11.2 check column, §11.4 measurements, S2/S3 acceptance, FrameSource row time; switch-off delay estimated from datasheets (A-3 open); concept rev 31 |
+| 2026-11-17 21:15 | VLT | concept | wip_commit | user request: commit concept rev 31, ADR-VLT-024 and both M3 reports (architecture, debugging concept), push and merge into main |
 
 ## Open items for the Director
 
