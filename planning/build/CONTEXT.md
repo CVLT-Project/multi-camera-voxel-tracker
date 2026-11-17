@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 21
+revision: 22
 created: 2026-11-02T15:28
-updated: 2026-11-17T17:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@26
+updated: 2026-11-17T20:00
+input: VLT/10-intake.md@2, VLT/20-concept.md@29
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -74,6 +74,12 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | scenario | the ground truth both camera simulators read: ball trajectory, laser state, spot, calibrations | `Scenario` (`sim/`) | VLT (architecture, rev 25) | proposed — Gate 2 |
 | fault reaction | the detection of a fault and the system's reaction, with its own origin and deadline, but no physical stimulus-to-effect chain: target loss, local galvo faults, galvo hang, no measurable spot, camera data loss (NF-VLT-26) | — | VLT (transaction review, rev 26) | active |
 | mode activity | a procedure inside an operating mode with a time limit: camera reintegration, arming check, galvo scan (NF-VLT-26) | — | VLT (transaction review, rev 26) | active |
+| mirror stream | the copy of every loop message a node sends, plus the receive records of the control and galvo nodes, pushed best effort to the monitoring laptop for debugging; never waits, laptop optional | `MonitorLink` | VLT (debugging concept, rev 29) | active |
+| incident | a single violation found by the monitor's plausibility checks (deadline, stage budget, lost or rejected message, inconsistency between nodes), with time, transaction, stage, node and sequence numbers; notifies only | `Incident` | VLT (debugging concept, rev 29) | active |
+| trace pin | a GPIO output per node that pulses at traced stage boundaries and at each full second of the shared clock, recorded by the logic analyzer | `TracePin` | VLT (debugging concept, rev 29) | active |
+| wiring profile | one of two fixed assignments of the 8 logic-analyzer channels: A "chain" (transactions T1, T3, T6) and B "safety" (T8, galvo fault reactions) | — | VLT (debugging concept, rev 29) | active |
+| test profile | the node image variant for integration tests; it adds the fault injector and is never used for the demo | `FaultInjector` | VLT (debugging concept, rev 29) | active |
+| failure record | the files kept for one failed test: session recording, monitor session file, analyzer capture, deployed commit and setup revision | — | VLT (debugging concept, rev 29) | active |
 
 ## Naming rules
 
