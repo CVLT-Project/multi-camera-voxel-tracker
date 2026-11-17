@@ -2,10 +2,10 @@
 stage: concept
 owner: build-concept
 status: in_progress
-revision: 22
+revision: 25
 version: 0.1
 created: 2026-11-02T16:10
-updated: 2026-11-12T20:00
+updated: 2026-11-17T14:00
 input: VLT/10-intake.md@2, requirements review request (chat, 2026-11-06), DRS completeness review request and sponsor answers to OQ-6 … OQ-17 (chat, 2026-11-10), sponsor decisions on operator control, operator feedback and admin access (chat, 2026-11-10), report requirements M3 and lecture slides [L] (chat, 2026-11-10), hardware selection galvo/DAC/laser (chat, 2026-11-10), effect-supervision and shutdown-origin corrections from the camera-team review (PR review, 2026-11-11), camera-team M3 groundwork (proposed, Gate 2), camera hardware on hand: Camera Module v2.1 on Pi 3 Model B+ (board photos, 2026-11-12)
 feature: VLT
 ---
@@ -87,6 +87,20 @@ F-VLT-28 now allows the galvo scan of F-VLT-13 during start-up (the two contradi
 
 NF-VLT-1: the lowest release in the acceptance runs is ≈ 120 mm, because F-VLT-7 starts a run only above 100 mm; "ordinary room lighting" is defined (normal ceiling lights, no extra lamps, no direct sunlight on the cube) and recorded with each run. F-VLT-28: both scans failing ends in the safe state within the same bound; acceptance adds success on the second scan (≤ 180 s) and two failed scans (safe state ≤ 180 s, no third scan).
 
+### Gate 1 approved — 2026-11-17 (rev 23)
+
+The sponsor approved the requirements of rev 22 at Gate 1 (2026-11-12). The "Proposed" markers were removed from the requirement rows of §3–§5 and from F-VLT-21; wording otherwise unchanged. OQ-3/4/7/12/14 and R-1 stay open into the architecture; the change requests under §11 are not approved with Gate 1.
+
+Architecture start (same rev): the sponsor fixed the implementation language — Python 3 on every node (ADR-VLT-023); new risk R-2 (galvo output stream and camera detection timing in Python) in §8.
+
+### Architecture — 2026-11-17 (rev 24)
+
+§11 filled: module tree (Python, ADR-VLT-023), slices S1–S8, module specifications, pipeline flow, interfaces, state machine, testability, scaling strategy and traceability matrix; transactions T6, T7, kill switch, arming check and galvo scan budgeted; integration tests completed. §12 consistency review: 2 MISMATCH (A-1 target expiry, A-4 schema fields), 3 DANGLING (A-3 switch-off delay, A-5 = R-1, A-6 = R-2). No requirement changed.
+
+### Simulators — 2026-11-17 (rev 25)
+
+On user request: simulators named by the boundary they replace. Node simulators (`CameraNodeSim`, `GalvoNodeSim`, `ControlNodeSim`, was CameraSim/GalvoSim/ControlSim) stay in `sim/` with the new shared `Scenario` and `Replay`; hardware simulators live with the node that uses them: `camera/sim_camera.py` (SimFrameSource, camera team), `galvo/sim_galvo_hw.py` (SimOutputStream, SimGpio, SimWatchdog, laser team), `common/sim_clock.py` (SimClock). LaserGuard receives its pins as objects. No requirement and no §12 verdict changed.
+
 ## 1. Purpose
 
 A lab demo that shows multi-camera 3D tracking. Three Raspberry Pi cameras stand at right angles around a cube; a ball swings on a string through the cube. The system computes the 3D position of the ball and steers a laser through a galvo mirror pair so that the spot stays on the ball. The cameras also see the spot, so the system measures its own aiming error. Built and operated by a team of 11 students, presented once to other students.
@@ -124,7 +138,7 @@ Full dictionary in `CONTEXT.md`. Delta introduced by this feature:
 
 ## 3. Functional Requirements
 
-_Rev 13 (cleanup for Gate 1): requirements state what is given and observable. Where we choose how something is done, it belongs in the architecture (lecture [L] p. 287). Design detail removed from these rows is kept in §10 as input for the architecture. Every row gives a reason; every requirement with a time names its unit and a lecture source [L] (slides "Distributed Real-Time Systems" WS26, PDF page numbers). The former user-interaction requirements U-VLT-1 … 7 are functional requirements F-VLT-34 … 40 (§4). "Proposed" marks requirements that the team has not yet approved at Gate 1._
+_Rev 13 (cleanup for Gate 1): requirements state what is given and observable. Where we choose how something is done, it belongs in the architecture (lecture [L] p. 287). Design detail removed from these rows is kept in §10 as input for the architecture. Every row gives a reason; every requirement with a time names its unit and a lecture source [L] (slides "Distributed Real-Time Systems" WS26, PDF page numbers). The former user-interaction requirements U-VLT-1 … 7 are functional requirements F-VLT-34 … 40 (§4). Since rev 23 no row carries a "Proposed" marker: all requirements of §3–§5 were approved at Gate 1 (2026-11-12, concept rev 22)._
 
 | ID | Requirement | Reason · lecture basis | Acceptance (falsifiable) | Origin | Evidence |
 | --- | --- | --- | --- | --- | --- |
@@ -148,28 +162,28 @@ _Rev 13 (cleanup for Gate 1): requirements state what is given and observable. W
 | F-VLT-18 | Every node measures its clock offset to the shared clock and reports it. The monitoring display derives the worst pairwise offset (max − min over all synchronized nodes) and flags it when it exceeds π = 1 ms (NF-VLT-24). | The precision of the global time must be measured, not assumed. [L] p. 92 (precision), 100 (synchronization condition). | Values appear on the display for all 5 nodes, updated at least once per second, together with the worst pairwise offset. The independent cross-check of NF-VLT-5 (LED flash) is still required, because these are the nodes' own estimates. | intake d-17 · DRS review | [evidenced] |
 | F-VLT-19 | If the galvo set contains its own pattern player, it is disabled or bypassed so that only the galvo node drives the mirrors. (The given set lists only galvo and driver, ADR-VLT-015; on the bench no pattern board is in the chain.) | No second, uncontrolled source may drive the actuator. [L] p. 247. | With the galvo node stopped, the mirrors don't move and no pattern is projected. | §9 galvo kit | [evidenced] |
 | F-VLT-20 | A node's observations or targets are used only while its clock is synchronized within 0.5 ms (π/2) of the clock reference (NF-VLT-24); until then the laser stays off. | Timestamps of unsynchronized nodes can't be compared. [L] p. 92, 97 (reasonableness), 100. | Start the system with clock synchronization disabled on one camera: its observations are ignored. Disabled on all cameras or on the galvo node: the laser stays off. Offset forced to 0.6 ms on one camera (test profile): its observations are ignored. | §9 · DRS review | [estimated] |
-| F-VLT-21 | After a safety fault, the laser stays off until the control node arms again per F-VLT-35. Safety faults are: kill switch pressed (F-VLT-30), target timeout, galvo or control restart, sync loss leaving fewer than two usable cameras or on the galvo node, alarm (F-VLT-16/26, or F-VLT-42 while tracking; a converter link fault counts through its observed effect, ADR-VLT-015/018), interrupted galvo output stream (F-VLT-15), fewer than two cameras present, and ball not seen by two cameras for > 1 s. Re-arming happens only after the fault has cleared and ≥ 2 cameras have seen the ball continuously for 2 s (configurable) (ADR-VLT-007/013). The galvo node itself refuses to switch the laser on after a safety fault until it has seen a new arming, even if status reports between the nodes were lost. Proposed (ADR-VLT-013): an alarm, or 3 safety faults within 60 s (configurable), latches the safe state; the latch clears only when the kill switch is pressed and released. Loss of the measurable spot during a galvo scan or arming check is not an alarm: it fails that scan or check (F-VLT-13/31/42). | Safety-relevant shutdowns need a deliberate resume; without an arming button, the kill switch provides the deliberate act. [L] p. 217 (safety), 254 (reaction matrix). | For each listed fault: the laser stays off after the fault clears until the 2 s hold-off has passed. Suppress all galvo status reports and inject a target timeout: the galvo node still keeps the laser off for targets from before the fault. Inject an alarm (including F-VLT-42 while tracking), or 3 target timeouts within 60 s: the system stays safe after the hold-off and re-arms only after the kill switch was pressed and released. Spot loss during a scan or check: that scan or check fails, no latch. | §9 · ADR-VLT-007/013/019 | [estimated] |
+| F-VLT-21 | After a safety fault, the laser stays off until the control node arms again per F-VLT-35. Safety faults are: kill switch pressed (F-VLT-30), target timeout, galvo or control restart, sync loss leaving fewer than two usable cameras or on the galvo node, alarm (F-VLT-16/26, or F-VLT-42 while tracking; a converter link fault counts through its observed effect, ADR-VLT-015/018), interrupted galvo output stream (F-VLT-15), fewer than two cameras present, and ball not seen by two cameras for > 1 s. Re-arming happens only after the fault has cleared and ≥ 2 cameras have seen the ball continuously for 2 s (configurable) (ADR-VLT-007/013). The galvo node itself refuses to switch the laser on after a safety fault until it has seen a new arming, even if status reports between the nodes were lost. (ADR-VLT-013) An alarm, or 3 safety faults within 60 s (configurable), latches the safe state; the latch clears only when the kill switch is pressed and released. Loss of the measurable spot during a galvo scan or arming check is not an alarm: it fails that scan or check (F-VLT-13/31/42). | Safety-relevant shutdowns need a deliberate resume; without an arming button, the kill switch provides the deliberate act. [L] p. 217 (safety), 254 (reaction matrix). | For each listed fault: the laser stays off after the fault clears until the 2 s hold-off has passed. Suppress all galvo status reports and inject a target timeout: the galvo node still keeps the laser off for targets from before the fault. Inject an alarm (including F-VLT-42 while tracking), or 3 target timeouts within 60 s: the system stays safe after the hold-off and re-arms only after the kill switch was pressed and released. Spot loss during a scan or check: that scan or check fails, no latch. | §9 · ADR-VLT-007/013/019 | [estimated] |
 | F-VLT-22 | Data used for fusion and aiming must meet explicit limits: observation age, difference of exposure times between cameras, prediction horizon and target validity. A new target based on expired observations is not fresh. Clock synchronization is checked throughout operation, including the age of the sync status. Invalid data is excluded, and the laser-off rules apply when no valid input remains. A correction of the shared clock must not extend the local target timeout (F-VLT-10). The limits are derived from the process: tolerated position error ÷ maximum ball speed of the operating envelope (NF-VLT-1). Their values are chosen by the team and set in the architecture (OQ-12). | An RT image may only be used while it is temporally accurate. [L] p. 116–120 (temporal accuracy, phase sensitivity), 146–148 (permanence). | Replay delayed observations, a stream of targets based on old frames, expired targets, lost sync and a clock step: invalid inputs never drive the laser, a healthy pair of cameras can still track, and the local target timeout is not extended by a clock change. Boundary tests use the limits agreed in OQ-12. | requirements review 2026-11-06 | [estimated] / limits [unknown] |
 | F-VLT-23 | Receivers check every message between camera, control and galvo nodes. A message with the wrong format or version, an unknown sender, or non-finite values can't update the accepted state or refresh a timeout. The same holds for duplicates, out-of-order messages and messages from before the sender's restart. Under a burst, memory stays bounded, and old messages are dropped, not processed late. | Independently developed nodes must agree on what is current; a stale message must never look fresh. [L] p. 137 (communication errors), 146 (permanence), 237 (idempotent messages). | Contract tests inject wrong versions or senders, truncated messages, NaN/∞, duplicates, reordering and a sender restart; only current valid inputs update the state. A burst beyond capacity: memory bounded, expired messages discarded per F-VLT-22. | requirements review 2026-11-06 | [estimated] |
 | F-VLT-24 | Before arming, configuration and calibration are validated together. Units and coordinate convention, camera identities and image modes, finite parameters and cross-field limits must agree, and all nodes must use the same setup. Missing, corrupt or incompatible files keep the laser off and produce a specific diagnostic (local log and monitoring, F-VLT-40). Nodes don't combine data or targets from different setups. | Wrong calibration looks like a valid measurement but produces a wrong aim. [L] p. 162 (error detection), 289 (information representation, units). | Remove or corrupt a file, swap camera calibrations, change the image mode or the setup on one node, set invalid limits: arming is refused with a diagnostic; incompatible peer data is rejected. A matching validated setup passes F-VLT-3/5 after restart. | requirements review 2026-11-06 | [estimated] |
-| F-VLT-25 | Proposed: the control node knows the actual laser state and the reason for laser-off, as reported by the galvo node, within 50 ms of every change and at least every 50 ms. It uses the actual state, not its own command, for F-VLT-16 and hit counting. When the galvo node restarts, the control node enters the safe state, so a restarted galvo node never switches the laser on without re-arming. | The effect at the actuator is the evidence, not the target; a reintegrated galvo node must not resume an old armed state. [L] p. 206–207 (end-to-end protocol), 240 (reintegration). | Restart the galvo node while armed and tracking: laser stays off until re-armed; the display shows the galvo restart. Force each laser-off reason: reported within 50 ms. Stop the status reports: control node enters the safe state within 100 ms + 10 ms. | DRS review | [estimated] |
-| F-VLT-26 | Proposed: while armed, the control node monitors the effect of the actuator. If the spot is seen more than 20 mm outside the cube volume, the system switches the laser off within 100 ms without waiting (T3), raises an alarm and enters the safe state (latched, F-VLT-21). If the aiming error stays above 50 mm for 500 ms while the ball is tracked and the laser is on, counted from the exposure of the first frame above 50 mm, the system does the same within a further 100 ms (T6, ≤ 600 ms in total). A measured aiming error ≤ 50 mm ends the episode; a missing or unmeasurable error does not end it and is handled by F-VLT-42. Both values are configurable; they are set so that normal tracking (NF-VLT-1) never trips them. | A blocked or misaimed actuator must be detected by its effect. [L] p. 206–207 (end-to-end protocol), 247 (fault-tolerant actuators). | Block one mirror mechanically (or load a calibration with an offset in a test profile) while armed: laser off and alarm within 500 ms + 100 ms of the first frame above 50 mm. Spot projected outside the cube by a second pointer: alarm and laser off within 100 ms, without a 500 ms wait. An error ≤ 50 mm before 500 ms ends the episode; frames without a measurable error do not. Three normal runs: no false trip. | DRS checklist (safety-relevant actuator) · ADR-VLT-018 | [estimated] |
-| F-VLT-27 | Proposed: before an observation is used for the ball state, the control node checks its plausibility. With three cameras, a camera whose observation disagrees with the other two by more than 10 px (reprojection, configurable) is excluded for that update and counted as not delivering. A ball state outside the cube volume is not aimed at. No pendulum motion model is used. Rejected updates count as gaps, never silently as hits. | A value failure of one camera must not move the aim; with three cameras it can be outvoted. [L] p. 230–232 (TMR, voters). | Replay with one camera reporting a false ball (synthetic offset of 30 px): that camera is excluded and the 3D error stays within F-VLT-3 limits; a ball state outside the cube is not aimed at; rejection counts are reported per run. | DRS checklist (fault hypothesis) | [estimated] |
-| F-VLT-28 | Proposed: the nodes can be powered and started in any order. Each node starts in a defined ground state: laser off, mirrors at centre, unarmed, no ball state, no history from a previous session. The system reaches "ready to arm" without manual sequencing within 60 s after the last node is up, including clock synchronization and camera calibration, when a valid galvo calibration is stored. Without one, the galvo scan (F-VLT-13) follows, and "ready to arm" is reached when a scan succeeds: within 60 s plus 60 s per scan attempt (at most 2 attempts). If both attempts fail, the system ends in the safe state with the laser off and a diagnostic (F-VLT-13) within the same bound. During start-up the laser is on only while that scan runs (F-VLT-8). A controlled shutdown switches the laser off and centres the mirrors before the galvo node stops. | Start and restart must be defined; the ground state is the safe point for start-up and reintegration. [L] p. 79 (ground state), 186 (mode changes), 240. | Power up the five nodes in three different orders with a valid galvo calibration stored: ready to arm in every case within 60 s after the last node is up; laser off throughout (photodiode). Power up without a galvo calibration: the laser is on only while the scan runs (photodiode against log), and ready to arm within 120 s after the last node is up when the first scan succeeds. First scan forced to fail, second succeeds: ready to arm within 180 s. Both scans forced to fail: safe state, laser off and diagnostic within 180 s, no third scan. Documented shutdown: laser off before the mirrors stop being driven. | DRS checklist (reintegration) | [estimated] |
-| F-VLT-29 | Proposed: the control node and the galvo node log every mode and safety transition with the shared time and the node's local time. Logged events: arm, disarm, safe state with reason, safety latch set or cleared, kill switch, degraded with camera, alarm, sync lost or regained, arming refused with reason, galvo scan started, failed or given up, setup invalid, and run start and end with result. Camera nodes log their own diagnostics (calibration failed, moved camera) the same way. For F-VLT-42 the log also holds the watchdog origin, the expiry and the time of the laser-off request. The log contains no images, is written without blocking the loop, and its size per session is bounded. | Every detected error must leave evidence for the fault-injection campaign and for faults without the laptop. [L] p. 254 (log column of the reaction matrix), 284 (fault injection). | After a fault-injection session every injected fault appears in the log with its reason, in the right order. Log writing throttled to the SD card's worst case does not change loop timing (NF-VLT-18). | DRS review · F-VLT-40 | [estimated] |
+| F-VLT-25 | The control node knows the actual laser state and the reason for laser-off, as reported by the galvo node, within 50 ms of every change and at least every 50 ms. It uses the actual state, not its own command, for F-VLT-16 and hit counting. When the galvo node restarts, the control node enters the safe state, so a restarted galvo node never switches the laser on without re-arming. | The effect at the actuator is the evidence, not the target; a reintegrated galvo node must not resume an old armed state. [L] p. 206–207 (end-to-end protocol), 240 (reintegration). | Restart the galvo node while armed and tracking: laser stays off until re-armed; the display shows the galvo restart. Force each laser-off reason: reported within 50 ms. Stop the status reports: control node enters the safe state within 100 ms + 10 ms. | DRS review | [estimated] |
+| F-VLT-26 | While armed, the control node monitors the effect of the actuator. If the spot is seen more than 20 mm outside the cube volume, the system switches the laser off within 100 ms without waiting (T3), raises an alarm and enters the safe state (latched, F-VLT-21). If the aiming error stays above 50 mm for 500 ms while the ball is tracked and the laser is on, counted from the exposure of the first frame above 50 mm, the system does the same within a further 100 ms (T6, ≤ 600 ms in total). A measured aiming error ≤ 50 mm ends the episode; a missing or unmeasurable error does not end it and is handled by F-VLT-42. Both values are configurable; they are set so that normal tracking (NF-VLT-1) never trips them. | A blocked or misaimed actuator must be detected by its effect. [L] p. 206–207 (end-to-end protocol), 247 (fault-tolerant actuators). | Block one mirror mechanically (or load a calibration with an offset in a test profile) while armed: laser off and alarm within 500 ms + 100 ms of the first frame above 50 mm. Spot projected outside the cube by a second pointer: alarm and laser off within 100 ms, without a 500 ms wait. An error ≤ 50 mm before 500 ms ends the episode; frames without a measurable error do not. Three normal runs: no false trip. | DRS checklist (safety-relevant actuator) · ADR-VLT-018 | [estimated] |
+| F-VLT-27 | Before an observation is used for the ball state, the control node checks its plausibility. With three cameras, a camera whose observation disagrees with the other two by more than 10 px (reprojection, configurable) is excluded for that update and counted as not delivering. A ball state outside the cube volume is not aimed at. No pendulum motion model is used. Rejected updates count as gaps, never silently as hits. | A value failure of one camera must not move the aim; with three cameras it can be outvoted. [L] p. 230–232 (TMR, voters). | Replay with one camera reporting a false ball (synthetic offset of 30 px): that camera is excluded and the 3D error stays within F-VLT-3 limits; a ball state outside the cube is not aimed at; rejection counts are reported per run. | DRS checklist (fault hypothesis) | [estimated] |
+| F-VLT-28 | The nodes can be powered and started in any order. Each node starts in a defined ground state: laser off, mirrors at centre, unarmed, no ball state, no history from a previous session. The system reaches "ready to arm" without manual sequencing within 60 s after the last node is up, including clock synchronization and camera calibration, when a valid galvo calibration is stored. Without one, the galvo scan (F-VLT-13) follows, and "ready to arm" is reached when a scan succeeds: within 60 s plus 60 s per scan attempt (at most 2 attempts). If both attempts fail, the system ends in the safe state with the laser off and a diagnostic (F-VLT-13) within the same bound. During start-up the laser is on only while that scan runs (F-VLT-8). A controlled shutdown switches the laser off and centres the mirrors before the galvo node stops. | Start and restart must be defined; the ground state is the safe point for start-up and reintegration. [L] p. 79 (ground state), 186 (mode changes), 240. | Power up the five nodes in three different orders with a valid galvo calibration stored: ready to arm in every case within 60 s after the last node is up; laser off throughout (photodiode). Power up without a galvo calibration: the laser is on only while the scan runs (photodiode against log), and ready to arm within 120 s after the last node is up when the first scan succeeds. First scan forced to fail, second succeeds: ready to arm within 180 s. Both scans forced to fail: safe state, laser off and diagnostic within 180 s, no third scan. Documented shutdown: laser off before the mirrors stop being driven. | DRS checklist (reintegration) | [estimated] |
+| F-VLT-29 | The control node and the galvo node log every mode and safety transition with the shared time and the node's local time. Logged events: arm, disarm, safe state with reason, safety latch set or cleared, kill switch, degraded with camera, alarm, sync lost or regained, arming refused with reason, galvo scan started, failed or given up, setup invalid, and run start and end with result. Camera nodes log their own diagnostics (calibration failed, moved camera) the same way. For F-VLT-42 the log also holds the watchdog origin, the expiry and the time of the laser-off request. The log contains no images, is written without blocking the loop, and its size per session is bounded. | Every detected error must leave evidence for the fault-injection campaign and for faults without the laptop. [L] p. 254 (log column of the reaction matrix), 284 (fault injection). | After a fault-injection session every injected fault appears in the log with its reason, in the right order. Log writing throttled to the SD card's worst case does not change loop timing (NF-VLT-18). | DRS review · F-VLT-40 | [estimated] |
 | F-VLT-30 | Software senses the kill switch (galvo node) and reports it; a broken sense wire reads as pressed. Pressing the kill switch puts the system into the safe state within 100 ms (ADR-VLT-007). The kill switch is the operator's only physical control: pressing it disarms, and releasing it allows re-arming per F-VLT-35 (ADR-VLT-013). The supply interruption itself stays independent of software (NF-VLT-3). | The software must not stay armed across a kill-switch press, and the operator needs one deliberate physical control. [L] p. 217 (safety), 52–53 (hard deadline). | Press the kill switch during tracking: laser off immediately (hardware), display shows it within 100 ms, safe state; release: laser stays off until the control node re-arms after the 2 s hold-off. Unplug the sense wire: reported as pressed. | sponsor 2026-11-10 · ADR-VLT-007/013 | [estimated] |
 | F-VLT-31 | Before every arming the galvo node projects 3 check points onto floor or walls (points hidden by the ball are replaced) and the cameras measure them. If any lies more than 5 mm from its commanded position, a point can't be measured, or F-VLT-42 expires, arming is refused with the laser off, a diagnostic names the reason, and the control node starts a galvo scan by itself (F-VLT-13) (ADR-VLT-012/013). The check takes ≤ 1 s with the laser on inside the cube and runs without an operator. | A moved galvo would aim wrongly at the ball; the error must be detected before the laser is used. [L] p. 162 (error detection), 206. | Shift the galvo mounting slightly (or load a calibration with an offset): arming refused with the diagnostic, a scan starts by itself, afterwards the check passes and the system arms. Hide a check point so that it can't be measured: the check fails, the system does not arm. Correct calibration: arming succeeds and the check takes ≤ 1 s (photodiode, log). | sponsor 2026-11-10 · ADR-VLT-012/013/019 | [estimated] |
-| F-VLT-32 | Proposed: on request in the configuration, the control node records a session: every observation, target, galvo status report, mode event and timestamp the loop uses, no images. Recording never blocks the loop and its size per session is bounded. A recorded session can be fed into the hardware-free replay (NF-VLT-22) and yields the same decisions. | Faults seen on the real setup must be reproducible offline, without the probe effect of extra instrumentation. [L] p. 281 (cluster simulation), 282 (probe effect). | Record a 10-min session and replay it offline: mode changes, validity decisions and run results identical; NF-VLT-18 unchanged with recording on; recording stops at its size limit without affecting the loop. | sponsor 2026-11-10 | [estimated] |
-| F-VLT-33 | Proposed: two dry-run modes are set in the configuration. In *laser disabled*, the whole loop runs and the mirrors move, but the laser stays off. In *galvo disabled*, only tracking and monitoring run, with no galvo output. The display shows the active mode. | The loop must be testable during integration without laser risk. [L] p. 267–269 (design for testability, test doubles). | In each mode a full run produces tracking and monitoring data; a photodiode shows the laser never on; in *galvo disabled* the galvo output stays at centre. | sponsor 2026-11-10 | [estimated] |
+| F-VLT-32 | On request in the configuration, the control node records a session: every observation, target, galvo status report, mode event and timestamp the loop uses, no images. Recording never blocks the loop and its size per session is bounded. A recorded session can be fed into the hardware-free replay (NF-VLT-22) and yields the same decisions. | Faults seen on the real setup must be reproducible offline, without the probe effect of extra instrumentation. [L] p. 281 (cluster simulation), 282 (probe effect). | Record a 10-min session and replay it offline: mode changes, validity decisions and run results identical; NF-VLT-18 unchanged with recording on; recording stops at its size limit without affecting the loop. | sponsor 2026-11-10 | [estimated] |
+| F-VLT-33 | Two dry-run modes are set in the configuration. In *laser disabled*, the whole loop runs and the mirrors move, but the laser stays off. In *galvo disabled*, only tracking and monitoring run, with no galvo output. The display shows the active mode. | The loop must be testable during integration without laser risk. [L] p. 267–269 (design for testability, test doubles). | In each mode a full run produces tracking and monitoring data; a photodiode shows the laser never on; in *galvo disabled* the galvo output stays at centre. | sponsor 2026-11-10 | [estimated] |
 | F-VLT-34 | (was U-VLT-1) The monitoring laptop shows live: mode (F-VLT-41), current aiming error, hit rate of the current and last run, camera status per node (F-VLT-11), galvo status and laser-off reason (F-VLT-25), clock offset per node and worst pairwise offset (F-VLT-18), and the camera images with the detected ball and spot marked. | The operator's only status display (F-VLT-40). Monitoring is a soft real-time function (T4). [L] p. 52 (soft deadline), 128 (composability). | During a run every listed value is visible and updates at least once per second; images at ≥ 1 per second per camera. | intake d-18 | [evidenced] |
 | F-VLT-35 | (was U-VLT-2) Arming and disarming are decided by the control node software (ADR-VLT-013). The only physical operator control is the kill switch (NF-VLT-3, F-VLT-30); there is no arming button. The control node arms when all of these hold: the kill switch is released, no safety fault is active or latched (F-VLT-21), the setup is valid (F-VLT-24), ≥ 2 cameras have seen the ball continuously for 2 s, and the arming check passes (F-VLT-31). The same rule applies at start and after a safety fault. The system disarms on every safety fault and when the kill switch is pressed. No network command or other control path arms, disarms or starts a calibration. | One defined, local control path; the laser comes on only with all prerequisites met. [L] p. 186 (mode changes), 217 (safety). | After start and after every safety fault: the laser switches on only after ≥ 2 cameras have seen the ball for 2 s and the arming check has passed; with the kill switch pressed or the setup invalid it never arms. Pressing the kill switch disarms. No network command arms or disarms (NF-VLT-10); the setup has no physical operator input other than the kill switch (inspection). | intake d-24 · ADR-VLT-013 | [evidenced] |
 | F-VLT-36 | (was U-VLT-3) dropped by the sponsor at the PM review (2026-11-02) — was: "recalibration recommended" hint on a systematic aiming error. | Replaced by the arming check, which starts a galvo scan by itself (F-VLT-31). | — | intake d-27 | — |
-| F-VLT-37 | (was U-VLT-4) Proposed: a system health overview on the monitoring laptop shows per node: status, software version, setup identity, clock state (synchronized, offset, clock stepped or stopped since start), CPU and RAM, message rates in and out, dropped and rejected messages, and the latency per stage of the tracking chain (median and 99th percentile over the last second; full statistics in F-VLT-39). Every value that has a limit in these requirements is shown with that limit and highlighted when outside. Highlighted too: different versions or setups between nodes, and a clock that stops, jumps or runs at a different rate than the others. | Integration faults must point to the node and stage that cause them. [L] p. 163 (monitoring the message flow), 266 (monitor the budget in operation). | Inject one fault each — unsynced camera, clock step on one node, frozen node process, overloaded camera node, wrong software version, delayed messages: within 2 s the highlighted value names the faulty node and stage. All values update at least once per second; NF-VLT-6/8 still hold. | sponsor 2026-11-10 | [estimated] |
-| F-VLT-38 | (was U-VLT-5) Proposed: the fused 3D ball position, the predicted aim point and the measured spot are drawn into every camera image on the monitoring laptop, next to that camera's own detection. | A wrong calibration becomes visible at a glance. [L] p. 162 (error detection). | Shift one camera's calibration by 5 px: its image shows the drawn position visibly off the detected ball while the other two match; with a correct setup drawn and detected positions agree within the F-VLT-3 tolerance. | sponsor 2026-11-10 | [estimated] |
-| F-VLT-39 | (was U-VLT-6) Proposed: chain delay statistics. For every position update the delay of each stage of the tracking chain is traced: capture and readout, detection, camera → control transmission, waiting for the position update, fusion and prediction, control → galvo transmission, waiting until placement, galvo output. Stages that run per camera are traced per camera. Mirror settling, which the nodes can't see, comes from the independent measurement (NF-VLT-29). For each stage and end to end, the monitoring laptop shows count, minimum, maximum, mean, standard deviation (jitter), median, 95th and 99th percentile. Three windows: last second, current run, whole session (resettable on the laptop). It also shows each stage's share of the end-to-end delay and a histogram with the 30 ms limit (NF-VLT-18) and each stage budget marked. Deadline misses and discarded targets are counted. At the end of each run and session the statistics are saved on the laptop as a file (numbers only) for the test report. | The deadline is met only if every stage stays in its budget; maxima and their distribution must be visible. [L] p. 39–40 (budget per stage), 68 (action duration statistics), 266 (testing the temporal domain). | 10-min run: statistics for all stages and windows shown and saved; the sum of stage means equals the end-to-end mean within 1 ms; adding a 5 ms delay in one stage (test profile) shows in that stage's statistics and share within 2 s, not in the others; values agree with the logged per-stage timestamps of NF-VLT-18. | sponsor 2026-11-10 | [estimated] |
+| F-VLT-37 | (was U-VLT-4) A system health overview on the monitoring laptop shows per node: status, software version, setup identity, clock state (synchronized, offset, clock stepped or stopped since start), CPU and RAM, message rates in and out, dropped and rejected messages, and the latency per stage of the tracking chain (median and 99th percentile over the last second; full statistics in F-VLT-39). Every value that has a limit in these requirements is shown with that limit and highlighted when outside. Highlighted too: different versions or setups between nodes, and a clock that stops, jumps or runs at a different rate than the others. | Integration faults must point to the node and stage that cause them. [L] p. 163 (monitoring the message flow), 266 (monitor the budget in operation). | Inject one fault each — unsynced camera, clock step on one node, frozen node process, overloaded camera node, wrong software version, delayed messages: within 2 s the highlighted value names the faulty node and stage. All values update at least once per second; NF-VLT-6/8 still hold. | sponsor 2026-11-10 | [estimated] |
+| F-VLT-38 | (was U-VLT-5) The fused 3D ball position, the predicted aim point and the measured spot are drawn into every camera image on the monitoring laptop, next to that camera's own detection. | A wrong calibration becomes visible at a glance. [L] p. 162 (error detection). | Shift one camera's calibration by 5 px: its image shows the drawn position visibly off the detected ball while the other two match; with a correct setup drawn and detected positions agree within the F-VLT-3 tolerance. | sponsor 2026-11-10 | [estimated] |
+| F-VLT-39 | (was U-VLT-6) Chain delay statistics. For every position update the delay of each stage of the tracking chain is traced: capture and readout, detection, camera → control transmission, waiting for the position update, fusion and prediction, control → galvo transmission, waiting until placement, galvo output. Stages that run per camera are traced per camera. Mirror settling, which the nodes can't see, comes from the independent measurement (NF-VLT-29). For each stage and end to end, the monitoring laptop shows count, minimum, maximum, mean, standard deviation (jitter), median, 95th and 99th percentile. Three windows: last second, current run, whole session (resettable on the laptop). It also shows each stage's share of the end-to-end delay and a histogram with the 30 ms limit (NF-VLT-18) and each stage budget marked. Deadline misses and discarded targets are counted. At the end of each run and session the statistics are saved on the laptop as a file (numbers only) for the test report. | The deadline is met only if every stage stays in its budget; maxima and their distribution must be visible. [L] p. 39–40 (budget per stage), 68 (action duration statistics), 266 (testing the temporal domain). | 10-min run: statistics for all stages and windows shown and saved; the sum of stage means equals the end-to-end mean within 1 ms; adding a 5 ms delay in one stage (test profile) shows in that stage's statistics and share within 2 s, not in the others; values agree with the logged per-stage timestamps of NF-VLT-18. | sponsor 2026-11-10 | [estimated] |
 | F-VLT-40 | (was U-VLT-7) Operating the demo requires the monitoring laptop: it is the operator's only status display, and no node has a local indicator (sponsor decision 2026-11-10). Without the laptop the system still tracks and stays safe (NF-VLT-7), but the operator sees only the laser. Therefore: (a) within 2 s of connecting or reconnecting, the laptop shows the current state of every node. That covers mode, armed or safe, an active safety latch with its cause, the kill switch, and the reason the system is not armed. It also shows the diagnostics and alarms since the node started, not only events after the connection. (b) A node from which no monitoring data has arrived for 2 s is shown as stale, and its last values are marked as not current. (c) Every diagnostic and alarm shown on the laptop is also written to the local log (F-VLT-29). | The only display must never show an old state as current. [L] p. 52 (soft deadline), 163 (monitoring the message flow). | Start without the laptop, inject an alarm and an invalid setup on one camera, then connect the laptop: within 2 s it shows the latch with its cause, the setup error naming the camera, and why the system is not armed. Stop one node's monitoring sender: shown as stale within 2 s. After a session without the laptop every injected fault is in the log. | sponsor 2026-11-10 (G2) | [estimated] |
-| F-VLT-41 | Proposed: the system has these operating modes, shown on the display (F-VLT-34) and logged (F-VLT-29). **Start** (ground state, calibrating cameras, synchronizing clocks). **Calibrating galvo** (F-VLT-13). **Ready** (not armed, all prerequisites met except the ball). **Arming check** (F-VLT-31). **Tracking**, normal or degraded (F-VLT-11). **Safe**, latched or not (F-VLT-21). The configurations are: normal, dry run *laser disabled*, dry run *galvo disabled* (F-VLT-33), with or without session recording (F-VLT-32). Changes towards laser off take effect within the deadlines of NF-VLT-26. The laser can come on only through *arming check* → *tracking*, or in *calibrating galvo*. A configuration takes effect only at a node start. No other mode or transition exists. | Modes and mode changes must be listed so that every transition is tested; switching configuration at runtime is unsafe. [L] p. 186 (mode changes take effect at the ground state), 287 (modes of operation and configurations). | In the fault-injection campaign (NF-VLT-23) and three normal runs, the logged mode sequence contains only the listed transitions; the laser is never on in a mode other than *arming check*, *tracking* or *calibrating galvo* (photodiode against log); changing the configuration of a running node has no effect until restart. | lecture checklist p. 287 (modes, mode changes) | [estimated] |
-| F-VLT-42 | Proposed: whenever the laser is on (galvo scan, arming check, tracking), the control node checks that the spot is measurable. From the first laser-on placement, a measurable spot must be seen within 500 ms and then at least every 500 ms while the laser stays on. While tracking, "measurable" means a valid aiming error (F-VLT-6); during a scan or check it means a spot located in 3D by at least two cameras, without a ball. A missing spot, a spot off the ball seen by one camera only, and stale or rejected observations do not count. The interval is measured on a local monotonic clock; clock corrections, new targets and mode changes with the laser on don't restart it. When it expires the laser is off within 100 ms (T6, ≤ 600 ms in total), and a later measurement can't cancel this. Tracking: alarm and safe state (latched, F-VLT-21). Galvo scan: the scan fails (F-VLT-13). Arming check: the check fails (F-VLT-31). A faster shutdown (ball lost, sync loss, kill switch, output stop) always wins. The value 500 ms is configurable for test profiles only (ADR-VLT-018/019). | The laser must not stay on when its effect can't be measured: F-VLT-26 only reacts to a measured error, so a spot that can't be measured had no time limit. [L] p. 206–207 (end-to-end protocol, effect monitoring), 254 (reaction matrix). | Replay and fault tests: no spot from the first emission, spot lost later, spot off the ball seen by one camera, stale or duplicate observations, a clock step and a target change during the interval, a valid measurement just before and just after expiry. In each case the laser is off ≤ 600 ms after the stated origin (photodiode, NF-VLT-29), with the outcome of the current mode; invalid data never extends the interval. No alarm while the laser is actually off. | review 2026-11-11 · ADR-VLT-019 | [estimated] / feasibility depends on the camera (OQ-1) |
+| F-VLT-41 | The system has these operating modes, shown on the display (F-VLT-34) and logged (F-VLT-29). **Start** (ground state, calibrating cameras, synchronizing clocks). **Calibrating galvo** (F-VLT-13). **Ready** (not armed, all prerequisites met except the ball). **Arming check** (F-VLT-31). **Tracking**, normal or degraded (F-VLT-11). **Safe**, latched or not (F-VLT-21). The configurations are: normal, dry run *laser disabled*, dry run *galvo disabled* (F-VLT-33), with or without session recording (F-VLT-32). Changes towards laser off take effect within the deadlines of NF-VLT-26. The laser can come on only through *arming check* → *tracking*, or in *calibrating galvo*. A configuration takes effect only at a node start. No other mode or transition exists. | Modes and mode changes must be listed so that every transition is tested; switching configuration at runtime is unsafe. [L] p. 186 (mode changes take effect at the ground state), 287 (modes of operation and configurations). | In the fault-injection campaign (NF-VLT-23) and three normal runs, the logged mode sequence contains only the listed transitions; the laser is never on in a mode other than *arming check*, *tracking* or *calibrating galvo* (photodiode against log); changing the configuration of a running node has no effect until restart. | lecture checklist p. 287 (modes, mode changes) | [estimated] |
+| F-VLT-42 | Whenever the laser is on (galvo scan, arming check, tracking), the control node checks that the spot is measurable. From the first laser-on placement, a measurable spot must be seen within 500 ms and then at least every 500 ms while the laser stays on. While tracking, "measurable" means a valid aiming error (F-VLT-6); during a scan or check it means a spot located in 3D by at least two cameras, without a ball. A missing spot, a spot off the ball seen by one camera only, and stale or rejected observations do not count. The interval is measured on a local monotonic clock; clock corrections, new targets and mode changes with the laser on don't restart it. When it expires the laser is off within 100 ms (T6, ≤ 600 ms in total), and a later measurement can't cancel this. Tracking: alarm and safe state (latched, F-VLT-21). Galvo scan: the scan fails (F-VLT-13). Arming check: the check fails (F-VLT-31). A faster shutdown (ball lost, sync loss, kill switch, output stop) always wins. The value 500 ms is configurable for test profiles only (ADR-VLT-018/019). | The laser must not stay on when its effect can't be measured: F-VLT-26 only reacts to a measured error, so a spot that can't be measured had no time limit. [L] p. 206–207 (end-to-end protocol, effect monitoring), 254 (reaction matrix). | Replay and fault tests: no spot from the first emission, spot lost later, spot off the ball seen by one camera, stale or duplicate observations, a clock step and a target change during the interval, a valid measurement just before and just after expiry. In each case the laser is off ≤ 600 ms after the stated origin (photodiode, NF-VLT-29), with the outcome of the current mode; invalid data never extends the interval. No alarm while the laser is actually off. | review 2026-11-11 · ADR-VLT-019 | [estimated] / feasibility depends on the camera (OQ-1) |
 
 ## 4. User Interaction Requirements
 
@@ -201,18 +215,18 @@ Merged into §3 at rev 13 so that the report uses only F- and NF- IDs: U-VLT-1 �
 | NF-VLT-20 | Clock precision (NF-VLT-5) holds with monitoring traffic at its maximum (NF-VLT-8). | Network load adds latency jitter to clock synchronization. [L] p. 105 (latency jitter). | Clock offsets ≤ 1 ms during a 10-min run with monitoring at maximum rate. | §9 (shared switch) | [estimated] |
 | NF-VLT-21 | A reference data set is recorded once with the final setup. It contains time-synchronized frames of all three cameras covering: a resting ball at ≥ 10 positions spread over the cube, swinging runs (release until amplitude < 50 mm), the spot on and off the ball, laser off, frames without the ball, and the ball being carried outward by hand (F-VLT-7). Every frame is annotated with the image positions of ball (centre and radius) and spot, in the same pixel coordinates as the detection (origin top-left, v downward). For the resting positions the 3D ball position is measured by hand. The set and its annotations are stored in the repository and are the input of the automated detection, triangulation, aiming-error, prediction and run tests. It is an explicit exception to NF-VLT-11, on condition that no people appear in the frames. After a significant setup change (camera, background, ball, laser or lighting) it is recorded again. | Detection and evaluation must be testable repeatably without hardware. [L] p. 264–266 (unit tests), 283 (test selection). | The data set exists in the repository with an annotation file that passes a schema check, covers every listed case for all three cameras, and contains no people (reviewed). | team review | [evidenced] |
 | NF-VLT-22 | The shared processing and decision logic can be tested without cameras, Pis or galvo hardware. Tests replay the reference data set and synthetic message and time events through the same logic used on the nodes, with a simulated clock and captured actuator output. Replay includes two-camera combinations, loss, delay and reordering, node restart and sync loss. It adds no live target path to the monitoring laptop. | Integration faults must be found before the real setup is available. [L] p. 269 (test doubles), 281 (cluster simulation). | One documented target runs the replay suite without hardware. The same input and event schedule always gives the same validity decisions, state transitions and run result; numeric outputs meet the existing tolerances. Fault cases check F-VLT-22 … 24. Physical timing and aiming acceptance still require the real setup. | requirements review 2026-11-06 | [estimated] |
-| NF-VLT-23 | Proposed — **fault hypothesis.** Fault-containment regions: each of the five nodes, the Ethernet switch, converter board + galvo driver, the laser module. **Tolerated (k = 1, 2-of-3):** crash, omission or timing failure of one camera node, including its restart (F-VLT-11/17), and a detectable value failure of one camera while three deliver (F-VLT-27). **Detected and turned into the safe state (fail-safe):** crash or omission of the control node or the switch (F-VLT-10), loss of the clock reference or sync loss (F-VLT-20/22), galvo node restart (F-VLT-25), interrupted galvo output stream (F-VLT-15), converter link fault that produces an observable effect (spot outside the cube: T3; persistent aiming error or no measurable spot: T6; F-VLT-26/42, ADR-VLT-015/018), a second camera fault, actuator misbehaviour (F-VLT-16/26/42), galvo node software hang (NF-VLT-30, T7, within 1 s). **Not covered — residual risk, kill switch only (NF-VLT-3):** a hang shorter than 1 s (laser frozen at its last clamped aim), undetected consistent value failures of two cameras, a laser stuck on in hardware, a converter link fault without an observable effect. **Fault frequency:** at most one fault at a time; a second fault no earlier than 10 s after recovery from the first. | Guarantees hold only for faults the hypothesis covers. [L] p. 60 (fault hypothesis), 229 (node as unit of failure), 234 (fail-silent), 284 (fault injection beyond the hypothesis). | Fault-injection campaign on the real setup per NF-VLT-34, plus at least two faults beyond the hypothesis (two cameras at once; camera fault during control restart): each tolerated fault keeps tracking, each detected fault ends in laser off within its deadline (NF-VLT-26), each beyond-hypothesis case ends in laser off or is recorded as residual. Converter faults are injected both with and without an observable effect; the latter are recorded as outside the detection guarantee. Results logged per F-VLT-29. | DRS checklist (fault hypothesis) · ADR-VLT-018 | [estimated] / inter-fault time [estimated] |
-| NF-VLT-24 | Proposed — **global time base.** The precision π ≤ 1 ms of NF-VLT-5 means that every node within π/2 = 0.5 ms of the clock reference. The global granularity g for comparisons between nodes is fixed with g > π (reasonableness condition). Timestamps keep ns resolution, but the order or duration of events on different nodes is only claimed beyond ±2g. The fusion error budget (OQ-14) includes the timestamp uncertainty × maximum ball speed. Corrections of the shared clock never lengthen or shorten local timeouts (F-VLT-10, F-VLT-22). No other time service adjusts the node clocks. | Timestamps from different nodes are only comparable within the limits of time measurement. [L] p. 92 (precision), 97 (reasonableness g > π), 98 (±2g), 106 (clock correction). | Configuration check on every node: only the shared clock synchronization adjusts the clock. Stop the clock reference during tracking: nodes flag unsynced within the sync-status age (OQ-12) and the laser goes off. Step the shared clock by 50 ms on the galvo node: the target timeout still fires at 100 ms ± 10 ms. The value of g is recorded once OQ-1/OQ-12 fix the camera timestamp source. | DRS checklist (global time base) · ADR-VLT-002 | [estimated] |
-| NF-VLT-25 | Proposed — **fail-safe laser enable.** The laser emits only while the galvo node actively drives its enable signal. An unpowered, booting, rebooting or crashed galvo node, a broken enable wire or a floating input all leave the laser off, by hardware design. | The ground state of the actuator must be safe without software. [L] p. 79 (ground state), 217 (safety). | With the laser supply on and the kill switch closed: power the galvo node off, reboot it, kill the galvo process, unplug the enable wire — a photodiode shows the laser off in every case, including during the whole boot. | DRS review | [estimated] |
+| NF-VLT-23 | **Fault hypothesis.** Fault-containment regions: each of the five nodes, the Ethernet switch, converter board + galvo driver, the laser module. **Tolerated (k = 1, 2-of-3):** crash, omission or timing failure of one camera node, including its restart (F-VLT-11/17), and a detectable value failure of one camera while three deliver (F-VLT-27). **Detected and turned into the safe state (fail-safe):** crash or omission of the control node or the switch (F-VLT-10), loss of the clock reference or sync loss (F-VLT-20/22), galvo node restart (F-VLT-25), interrupted galvo output stream (F-VLT-15), converter link fault that produces an observable effect (spot outside the cube: T3; persistent aiming error or no measurable spot: T6; F-VLT-26/42, ADR-VLT-015/018), a second camera fault, actuator misbehaviour (F-VLT-16/26/42), galvo node software hang (NF-VLT-30, T7, within 1 s). **Not covered — residual risk, kill switch only (NF-VLT-3):** a hang shorter than 1 s (laser frozen at its last clamped aim), undetected consistent value failures of two cameras, a laser stuck on in hardware, a converter link fault without an observable effect. **Fault frequency:** at most one fault at a time; a second fault no earlier than 10 s after recovery from the first. | Guarantees hold only for faults the hypothesis covers. [L] p. 60 (fault hypothesis), 229 (node as unit of failure), 234 (fail-silent), 284 (fault injection beyond the hypothesis). | Fault-injection campaign on the real setup per NF-VLT-34, plus at least two faults beyond the hypothesis (two cameras at once; camera fault during control restart): each tolerated fault keeps tracking, each detected fault ends in laser off within its deadline (NF-VLT-26), each beyond-hypothesis case ends in laser off or is recorded as residual. Converter faults are injected both with and without an observable effect; the latter are recorded as outside the detection guarantee. Results logged per F-VLT-29. | DRS checklist (fault hypothesis) · ADR-VLT-018 | [estimated] / inter-fault time [estimated] |
+| NF-VLT-24 | **Global time base.** The precision π ≤ 1 ms of NF-VLT-5 means that every node within π/2 = 0.5 ms of the clock reference. The global granularity g for comparisons between nodes is fixed with g > π (reasonableness condition). Timestamps keep ns resolution, but the order or duration of events on different nodes is only claimed beyond ±2g. The fusion error budget (OQ-14) includes the timestamp uncertainty × maximum ball speed. Corrections of the shared clock never lengthen or shorten local timeouts (F-VLT-10, F-VLT-22). No other time service adjusts the node clocks. | Timestamps from different nodes are only comparable within the limits of time measurement. [L] p. 92 (precision), 97 (reasonableness g > π), 98 (±2g), 106 (clock correction). | Configuration check on every node: only the shared clock synchronization adjusts the clock. Stop the clock reference during tracking: nodes flag unsynced within the sync-status age (OQ-12) and the laser goes off. Step the shared clock by 50 ms on the galvo node: the target timeout still fires at 100 ms ± 10 ms. The value of g is recorded once OQ-1/OQ-12 fix the camera timestamp source. | DRS checklist (global time base) · ADR-VLT-002 | [estimated] |
+| NF-VLT-25 | **Fail-safe laser enable.** The laser emits only while the galvo node actively drives its enable signal. An unpowered, booting, rebooting or crashed galvo node, a broken enable wire or a floating input all leave the laser off, by hardware design. | The ground state of the actuator must be safe without software. [L] p. 79 (ground state), 217 (safety). | With the laser supply on and the kill switch closed: power the galvo node off, reboot it, kill the galvo process, unplug the enable wire — a photodiode shows the laser off in every case, including during the whole boot. | DRS review | [estimated] |
 | NF-VLT-26 | **Real-time transactions and deadline classes** (sponsor, ADR-VLT-008). **T1 tracking** (exposure → spot placed) is *firm*, with the deadline and the handling of expired targets of NF-VLT-18. **T2 target-loss shutdown** (last valid target → laser off) is *hard* at 100 ms + 10 ms (F-VLT-10). **T3 unsafe-condition shutdown** (< 2 cameras, sync loss, alarm, actuator fault → laser off) is *hard* at 100 ms from the first frame exposure that shows the condition, or from the local event for faults detected on a node; it contains no 500 ms qualification. **T6 effect supervision** (aiming error > 50 mm for 500 ms, F-VLT-26; no measurable spot for 500 ms, F-VLT-42 → laser off) is *hard* at 500 ms + 100 ms from the origin stated there. **T7 galvo software hang** (output loop stops → laser off) is *hard* at 1 s in total, including reset and laser disable (NF-VLT-30). A faster applicable shutdown always wins. **T4 monitoring** is *soft*, best effort (NF-VLT-6). **T5 camera reintegration** has no deadline. The OS is not real-time, so hard deadlines are met by the software design, backed by the kill switch, and verified by measuring the maximum, not proven. | Deadlines are classified by the consequence of a miss. [L] p. 52–53 (soft, firm, hard), 266 (maximum by measurement). | 10-min run with monitoring at maximum (NF-VLT-9) plus the fault campaign (NF-VLT-34): T1 p99 and maximum reported, late targets counted; T2, T3, T6 and T7 maximum ≤ their deadline in every injected case, measured from their stated origin and independently (NF-VLT-29). | DRS checklist (deadline) · ADR-VLT-008/018 | [estimated] |
-| NF-VLT-27 | Proposed — **state semantics and load hypothesis.** Observations, targets and galvo status reports describe a state: only the newest valid one is used, older ones are skipped and never queued, and latency doesn't grow with load. Load hypothesis per channel at peak: camera → control: frame rate × observation size per camera; control → galvo: update rate × target size; galvo → control: status rate; clock synchronization: sync rate; monitoring ≤ 20 Mbit/s (NF-VLT-8). In total ≤ 50 % of each node's 100 Mbit/s link. The rates are fixed when OQ-1/OQ-12 fix the frame and update periods. | Response times can only be guaranteed below a peak load; a system must saturate, not thrash. [L] p. 60 (load hypothesis), 130 (state messages), 138 (thrashing). | Load test at 1.5 × the nominal camera frame rate (synthetic observations) with monitoring at maximum: end-to-end latency of the newest frame stays bounded (no growing backlog), skipped frames are counted, node memory constant. Port counters confirm each channel within its hypothesis. | DRS checklist (load hypothesis) | [estimated] |
-| NF-VLT-28 | Proposed — **isolated network and minimal node platform.** The five nodes and the monitoring laptop are the only devices on a dedicated switch, with no uplink to the lab network or the internet. For administration (NF-VLT-10) a team machine may also be connected, but not during acceptance runs. The network is trusted, so senders are identified without cryptographic authentication. Each node runs a minimal OS image set up by the script of NF-VLT-13: no desktop, Wi-Fi and Bluetooth off, no automatic updates, no time service other than the shared clock synchronization. | Hidden channels through shared resources and outside traffic must be excluded; security by isolation. [L] p. 128 (composability), 218 (security). | During acceptance runs the switch port list shows only the six devices; no default route on any node. Setup-script check on a fresh SD card: listed services disabled. NF-VLT-18 measured with this image. | DRS review | [estimated] |
-| NF-VLT-29 | Proposed — **independent timing measurement.** End-to-end timing (T1) and the shutdown deadlines (T2, T3, T6, T7) are verified with an instrument independent of the node clocks, not only from the nodes' own timestamps. For example: an LED flash in the cameras' view timed by a separate microcontroller or scope, and a photodiode at the galvo output or on the ball. | Self-reported timestamps share the errors of the system they measure. [L] p. 266 (testing the temporal domain), 282 (probe effect). | The test report contains, for T1, T2 and T3, the independent measurement (≥ 100 samples each) next to the self-reported values; their difference is stated. For T6 and T7, ≥ 10 injections per case, with fault injection, origin and laser off recorded separately. | DRS checklist (measurement on the target) · ADR-VLT-018 | [estimated] |
+| NF-VLT-27 | **State semantics and load hypothesis.** Observations, targets and galvo status reports describe a state: only the newest valid one is used, older ones are skipped and never queued, and latency doesn't grow with load. Load hypothesis per channel at peak: camera → control: frame rate × observation size per camera; control → galvo: update rate × target size; galvo → control: status rate; clock synchronization: sync rate; monitoring ≤ 20 Mbit/s (NF-VLT-8). In total ≤ 50 % of each node's 100 Mbit/s link. The rates are fixed when OQ-1/OQ-12 fix the frame and update periods. | Response times can only be guaranteed below a peak load; a system must saturate, not thrash. [L] p. 60 (load hypothesis), 130 (state messages), 138 (thrashing). | Load test at 1.5 × the nominal camera frame rate (synthetic observations) with monitoring at maximum: end-to-end latency of the newest frame stays bounded (no growing backlog), skipped frames are counted, node memory constant. Port counters confirm each channel within its hypothesis. | DRS checklist (load hypothesis) | [estimated] |
+| NF-VLT-28 | **Isolated network and minimal node platform.** The five nodes and the monitoring laptop are the only devices on a dedicated switch, with no uplink to the lab network or the internet. For administration (NF-VLT-10) a team machine may also be connected, but not during acceptance runs. The network is trusted, so senders are identified without cryptographic authentication. Each node runs a minimal OS image set up by the script of NF-VLT-13: no desktop, Wi-Fi and Bluetooth off, no automatic updates, no time service other than the shared clock synchronization. | Hidden channels through shared resources and outside traffic must be excluded; security by isolation. [L] p. 128 (composability), 218 (security). | During acceptance runs the switch port list shows only the six devices; no default route on any node. Setup-script check on a fresh SD card: listed services disabled. NF-VLT-18 measured with this image. | DRS review | [estimated] |
+| NF-VLT-29 | **Independent timing measurement.** End-to-end timing (T1) and the shutdown deadlines (T2, T3, T6, T7) are verified with an instrument independent of the node clocks, not only from the nodes' own timestamps. For example: an LED flash in the cameras' view timed by a separate microcontroller or scope, and a photodiode at the galvo output or on the ball. | Self-reported timestamps share the errors of the system they measure. [L] p. 266 (testing the temporal domain), 282 (probe effect). | The test report contains, for T1, T2 and T3, the independent measurement (≥ 100 samples each) next to the self-reported values; their difference is stated. For T6 and T7, ≥ 10 injections per case, with fault injection, origin and laser off recorded separately. | DRS checklist (measurement on the target) · ADR-VLT-018 | [estimated] |
 | NF-VLT-30 | If the galvo node's output loop stops (software hang), the laser goes off within 1 s in total (T7, including reset and laser disable), by the Pi's on-chip watchdog fed by the output loop (sponsor, ADR-VLT-010). The reset switches the laser off by NF-VLT-25, and the node reboots into the ground state (F-VLT-28). | A hung output task can keep the laser on; the heartbeat belongs at the end of the output task. [L] p. 167 (watchdog). | Freeze the galvo output loop (SIGSTOP) while the laser is on: photodiode shows the laser off within 1 s of the hang, including the reset; the node reboots into the ground state. | sponsor (OQ-16) · ADR-VLT-010/018 | [estimated] |
-| NF-VLT-31 | Proposed: each node type can run on the real setup while any of its peers is replaced by a simulator sending the same messages. The simulators are: a camera simulator playing recorded data, a galvo simulator recording the targets it receives, and a control simulator sending scripted targets. Simulators never drive the laser. | Nodes are integrated one at a time against test doubles. [L] p. 269 (test doubles), 279–281 (integration testing). | Each node passes its node tests with all peers simulated and with any mix of real and simulated peers; the health overview (F-VLT-37) marks simulated nodes. | sponsor 2026-11-10 | [estimated] |
-| NF-VLT-32 | Proposed — **physical layout for measurable hits**. The galvo is placed so that, throughout the operating envelope (NF-VLT-1), every pair of cameras includes at least one camera that sees the spot on the ball. The floor and walls used by the galvo scan and the arming check (F-VLT-13/31) are each visible to at least two cameras and don't block any camera's view of the tracking volume. Seen from the galvo, the whole cube lies within the usable optical scan angle with ≥ 10 % margin. The usable angle depends on the DAC level, the driver gain and any amplifier (ADR-VLT-015, OQ-4). | NF-VLT-1 must hold for every camera pair, and a hit can only be counted when a camera sees the lit side of the ball. Given hardware geometry is a requirement. [L] p. 287. | On the reference data set (NF-VLT-21): for every camera pair, at least one camera of the pair sees the spot in ≥ 95 % of the frames of the swinging runs with the spot on the ball. Every scan point of F-VLT-13 is seen by ≥ 2 cameras. Commanding the cube's corners: every corner is reached with the DAC output ≤ 90 % of its full scale. | review G4 · NF-VLT-1 | [estimated] |
-| NF-VLT-33 | Proposed — **timing of actions.** Every periodic action has a specified minimum and maximum period and a worst-case execution time: frame capture and detection per camera, position update and prediction, galvo output, galvo status report, monitoring. The worst-case execution time is measured on the target under the load hypothesis (NF-VLT-27) as the high-water mark over a 10-min run. Each action meets execution time < period. Every RT image that is used meets the phase-sensitivity condition update delay + period + execution time < temporal accuracy (F-VLT-22). We choose the period values, so they are set in the architecture. | Deadlines can only be met if every action has a bounded period and execution time. [L] p. 65 (d_WCET, d_MINT), 72 (WCET), 120 (phase-sensitive RT images), 266 (high-water mark), 287 (timing of actions). | For every listed action: measured period minimum and maximum within the specified bounds and execution-time high-water mark below the period over a 10-min run with monitoring at maximum; the phase-sensitivity condition holds with the measured values. | lecture checklist p. 287 (timing of actions) | [estimated] |
-| NF-VLT-34 | Proposed — **error detection coverage and reaction matrix.** Every error in the fault hypothesis (NF-VLT-23) is covered by the reaction matrix below: what detects it, how the system reacts, within which time, and what is logged (F-VLT-29). **Coverage target:** 100 % of the injected errors within the hypothesis are detected and handled within their time limit, with each matrix row injected at least 10 times on the real setup. Errors beyond the hypothesis, and faults without a guaranteed detection (NF-VLT-23), are injected and their outcome recorded separately; they don't count towards the coverage target. | Error detection needs numbers and mechanisms; every detectable error maps to a defined reaction. [L] p. 254 (reaction matrix), 284 (fault injection), 288 (error detection coverage). | Fault-injection report: per row the number of injections, detections and reactions within the time limit (target 10 of 10 for every row); beyond-hypothesis cases listed with their outcome. | lecture checklist p. 288 (error detection coverage) · ADR-VLT-018 | [estimated] |
+| NF-VLT-31 | Each node type can run on the real setup while any of its peers is replaced by a simulator sending the same messages. The simulators are: a camera simulator playing recorded data, a galvo simulator recording the targets it receives, and a control simulator sending scripted targets. Simulators never drive the laser. | Nodes are integrated one at a time against test doubles. [L] p. 269 (test doubles), 279–281 (integration testing). | Each node passes its node tests with all peers simulated and with any mix of real and simulated peers; the health overview (F-VLT-37) marks simulated nodes. | sponsor 2026-11-10 | [estimated] |
+| NF-VLT-32 | **Physical layout for measurable hits**. The galvo is placed so that, throughout the operating envelope (NF-VLT-1), every pair of cameras includes at least one camera that sees the spot on the ball. The floor and walls used by the galvo scan and the arming check (F-VLT-13/31) are each visible to at least two cameras and don't block any camera's view of the tracking volume. Seen from the galvo, the whole cube lies within the usable optical scan angle with ≥ 10 % margin. The usable angle depends on the DAC level, the driver gain and any amplifier (ADR-VLT-015, OQ-4). | NF-VLT-1 must hold for every camera pair, and a hit can only be counted when a camera sees the lit side of the ball. Given hardware geometry is a requirement. [L] p. 287. | On the reference data set (NF-VLT-21): for every camera pair, at least one camera of the pair sees the spot in ≥ 95 % of the frames of the swinging runs with the spot on the ball. Every scan point of F-VLT-13 is seen by ≥ 2 cameras. Commanding the cube's corners: every corner is reached with the DAC output ≤ 90 % of its full scale. | review G4 · NF-VLT-1 | [estimated] |
+| NF-VLT-33 | **Timing of actions.** Every periodic action has a specified minimum and maximum period and a worst-case execution time: frame capture and detection per camera, position update and prediction, galvo output, galvo status report, monitoring. The worst-case execution time is measured on the target under the load hypothesis (NF-VLT-27) as the high-water mark over a 10-min run. Each action meets execution time < period. Every RT image that is used meets the phase-sensitivity condition update delay + period + execution time < temporal accuracy (F-VLT-22). We choose the period values, so they are set in the architecture. | Deadlines can only be met if every action has a bounded period and execution time. [L] p. 65 (d_WCET, d_MINT), 72 (WCET), 120 (phase-sensitive RT images), 266 (high-water mark), 287 (timing of actions). | For every listed action: measured period minimum and maximum within the specified bounds and execution-time high-water mark below the period over a 10-min run with monitoring at maximum; the phase-sensitivity condition holds with the measured values. | lecture checklist p. 287 (timing of actions) | [estimated] |
+| NF-VLT-34 | **Error detection coverage and reaction matrix.** Every error in the fault hypothesis (NF-VLT-23) is covered by the reaction matrix below: what detects it, how the system reacts, within which time, and what is logged (F-VLT-29). **Coverage target:** 100 % of the injected errors within the hypothesis are detected and handled within their time limit, with each matrix row injected at least 10 times on the real setup. Errors beyond the hypothesis, and faults without a guaranteed detection (NF-VLT-23), are injected and their outcome recorded separately; they don't count towards the coverage target. | Error detection needs numbers and mechanisms; every detectable error maps to a defined reaction. [L] p. 254 (reaction matrix), 284 (fault injection), 288 (error detection coverage). | Fault-injection report: per row the number of injections, detections and reactions within the time limit (target 10 of 10 for every row); beyond-hypothesis cases listed with their outcome. | lecture checklist p. 288 (error detection coverage) · ADR-VLT-018 | [estimated] |
 
 **Reaction matrix (NF-VLT-34)**
 
@@ -322,6 +336,7 @@ Fixed running cost only — no usage-dependent drivers (hardware bought once; no
 | OQ-15 | Loop activation | Time-triggered fusion; galvo applies at `t_place_ns` and interpolates | decisions/ADR-VLT-009-time-triggered-loop.md |
 | OQ-16 | Galvo hang | On-chip watchdog on the galvo node | decisions/ADR-VLT-010-onchip-watchdog-galvo.md |
 | OQ-17 | Prediction model | Constant velocity / acceleration, no pendulum model | decisions/ADR-VLT-011-generic-motion-prediction.md |
+| — (architecture, 2026-11-17) | Programming language of the nodes | Python 3 on every node and the monitoring server; NumPy, OpenCV, picamera2, ALSA; one shared package for schemas, decision logic, replay and simulators | decisions/ADR-VLT-023-python-on-all-nodes.md |
 
 ### Open questions
 
@@ -348,6 +363,7 @@ _Owners of open and deferred questions are node teams (camera team, control team
 ### Known risks
 
 - **R-1** — The given camera may not meet the tracking deadline. Its high-rate 640 × 480 mode (≈ 103 fps) uses a cropped sensor area, so the field of view shrinks to ≈ 26.5° × 20°, below the ≥ 45° that the proposed layout needs. The full-view 1640 × 1232 mode keeps 62.2° × 48.8° but reaches only ≈ 42 fps (≈ 24 ms frame period), before readout, rolling-shutter correction and detection on a Pi 3. NF-VLT-18 (p99 ≤ 30 ms, given by the sponsor) stays unchanged. Check: bench measurement of the camera mode, readout and detection time in M3, before Gate 2. If it fails: a change request to NF-VLT-18 or to the layout (camera distance), decided by the team with the sponsor. — owner: Camera team — affects: NF-VLT-18, NF-VLT-1, NF-VLT-32.
+- **R-2** — The galvo node runs in Python (ADR-VLT-023). Its output stream is written to the DAC in blocks of ≤ 0.5 ms; interpreter or garbage-collection pauses may delay a block, and an empty output buffer stops the mirrors (T3, F-VLT-15). The detection stage of the camera nodes (4 ms in T1) carries the same risk and is checked with R-1. Check: block jitter and buffer underruns on the bench over a 10-min run, before Gate 2. If it fails: a change request (larger buffer within the T1 budget, or a compiled output kernel), decided by the team. — owner: Laser team — affects: F-VLT-5, F-VLT-15, NF-VLT-18, NF-VLT-33.
 
 ## 9. Artifact Interactions & Interferences
 
@@ -548,7 +564,830 @@ Proposed shared metadata (F-VLT-24): file schema version, `setup_revision`, coor
 
 ## 11. Architecture & Vertical Slices
 
-_M3 groundwork, **proposed** — taken from the camera-team review and recast as architecture input. Nothing in this section changes a requirement in §3–§10; changes that would are listed under *Requirement change requests*. All numbers are chosen by us ([L] p. 287) and are decided as a team in the M3 consistency review (Gate 2). Architecture document contents: [L] p. 290. Decisions: ADR-VLT-016, 017, 020, 021, 022 (all proposed)._
+_Written after Gate 1 (2026-11-12), rev 24; simulators reorganised in rev 25. Language: Python 3 on every node (ADR-VLT-023). Everything in this section is design we choose ([L] p. 287, architecture contents p. 290); it changes no requirement in §3–§10. Values marked **(Gate 2)** are proposals decided as a team in the consistency review. The camera-team groundwork (ADR-VLT-016/017/020/021/022, still proposed) is kept in §11.1–§11.6 below and is used by the module specifications. Requirement changes that the design would need are listed under* Requirement change requests *and are not applied._
+
+### Module overview & tree
+
+Code root `src/` (project root, `00-build.md`), one subfolder per node type plus the shared package, the simulators and the tests (NF-VLT-14). One module = one file = one class = one responsibility; exception: `galvo/sim_galvo_hw.py` holds the three small galvo hardware simulators. **Simulator naming (rev 25):** a *node simulator* `<Node>NodeSim` replaces a whole node at the network boundary and lives in `sim/`; a *hardware simulator* `Sim<Driver>` replaces one hardware driver inside a real node, has the same interface as that driver and lives in the folder of the node that uses it (`camera/`, `galvo/`; `common/` for the clock). Production modules never import a simulator; the node main receives the driver or its simulator in its constructor. Every node runs the same repository version and imports `common`, so the replay tests (NF-VLT-22) run exactly the code the nodes run.
+
+```
+src/
+  pyproject.toml                 one installable project, entry points per node
+  common/                        shared by every node (no hardware access)
+    messages.py        MessageCodec       schemas, encode/decode, field checks (F-VLT-23)
+    sequence.py        SequenceTracker    sender session adoption, uint32 wrap order, duplicates (F-VLT-23)
+    udp_link.py        StateLink          UDP state channel: send, drain-latest, no queue (NF-VLT-27)
+    clock_status.py    ClockStatus        shared-clock reads, sync state and age from ptp4l (F-VLT-18/20, NF-VLT-24)
+    config.py          Config             installation config: load, ranges, cross-field limits (F-VLT-24)
+    setup_identity.py  SetupIdentity      setup_revision hash, calibration-file binding (F-VLT-24)
+    geometry.py        CubeGeometry       cube volume, clamp, distance point ↔ line, outside-cube test (F-VLT-6/9/26)
+    camera_model.py    CameraModel        projection, back-projection rays, distortion (F-VLT-3/6/12)
+    galvo_model.py     GalvoModel         cube point ↔ mirror angles ↔ DAC sample values, beam line (F-VLT-5/6/9/13)
+    event_log.py       EventLog           bounded, non-blocking JSON-lines log in a writer process (F-VLT-29)
+    monitor_link.py    MonitorLink        best-effort push to the laptop in a sender process (NF-VLT-6/7/8)
+    node_health.py     NodeHealth         CPU, RAM, version, setup, clock values for the health overview (F-VLT-37, NF-VLT-19)
+    rt_loop.py         RtLoop             periodic loop on the shared clock: RT priority, core pinning, GC control, WCET high-water marks (NF-VLT-33, ADR-VLT-023)
+    sim_clock.py       SimClock           hardware simulator for ClockStatus: settable shared/monotonic time, offset, sync loss, clock steps (NF-VLT-22)
+  camera/                        camera node (one process for the loop, one for the pose check)
+    frame_source.py    FrameSource        picamera2 capture, exposure lock, timestamp mapping, row timing (F-VLT-1, ADR-VLT-020)
+    detector.py        Detector           ball disc and laser spot in one frame (F-VLT-1/2, NF-VLT-17)
+    calibrator.py      Calibrator         start-up calibration from the frame markers (F-VLT-12)
+    pose_checker.py    PoseChecker        pose check every 1 s in a low-priority process (F-VLT-12)
+    camera_node.py     CameraNode         node main: ground state, loop, Observation and CameraCalibration out (F-VLT-1/17/28)
+    sim_camera.py      SimFrameSource     hardware simulator for FrameSource: frames rendered from a Scenario or played from the reference data set; image-level faults (NF-VLT-22)
+  control/                       control node (one RT process)
+    validity_gate.py   ValidityGate       per-camera latest observation, age/skew/sync/setup checks, camera status (F-VLT-11/20/22)
+    triangulator.py    Triangulator       motion-compensated multi-ray triangulation and plausibility (F-VLT-3/27)
+    predictor.py       Predictor          constant-acceleration Kalman filter, prediction to t_place (F-VLT-4, ADR-VLT-011)
+    target_builder.py  TargetBuilder      Target with t_place, expiry, laser request, purpose, arm epoch (F-VLT-5/8/22)
+    effect_supervisor.py EffectSupervisor spot 3D, aiming error, hit, outside-cube, spot-while-off, F-VLT-42 watchdog (F-VLT-6/16/26/42)
+    run_scorer.py      RunScorer          rest position, release, end, hit rate, run result (F-VLT-7)
+    mode_machine.py    ModeMachine        operating modes, arming rule, safety faults, latch, galvo-scan attempts (F-VLT-8/11/21/28/35/41)
+    galvo_calibration.py GalvoCalibration galvo scan, model fit, arming check (F-VLT-13/31)
+    session_recorder.py SessionRecorder   bounded image-free recording of loop inputs and decisions (F-VLT-32)
+    chain_stats.py     ChainStats         per-stage and end-to-end delay statistics (F-VLT-39)
+    control_node.py    ControlNode        node main: one fusion slot per period, wiring of the modules above
+  galvo/                         galvo node (two RT processes: output loop and laser guard)
+    target_guard.py    TargetGuard        target acceptance, expiry, 100 ms local timeout (F-VLT-10/22)
+    laser_policy.py    LaserPolicy        laser request from target, epoch blocking, dry run (F-VLT-8/21/33)
+    output_stream.py   OutputStream       ALSA/I2S block writer, interpolation, underrun detection (F-VLT-5/15)
+    laser_guard.py     LaserGuard         sole owner of the laser-enable GPIO and the kill-switch sense (F-VLT-15/30, NF-VLT-16/25)
+    hw_watchdog.py     HwWatchdog         on-chip watchdog, fed only while both galvo processes are alive (NF-VLT-30)
+    galvo_node.py      GalvoNode          node main: output loop, GalvoStatus out (F-VLT-25/28)
+    sim_galvo_hw.py    SimOutputStream, SimGpio, SimWatchdog   hardware simulators for OutputStream, the laser-enable / kill-switch pins and HwWatchdog (NF-VLT-22)
+  monitor/                       monitoring laptop
+    monitor_server.py  MonitorServer      receive pushes, keep latest per node, flag stale nodes, serve the dashboard (F-VLT-34/37/40, NF-VLT-11)
+    dashboard/         static page        live view, health overview, overlays, chain statistics (F-VLT-34/37/38/39)
+  sim/                           node simulators, shared scenario and replay
+    scenario.py        Scenario           ground truth over time: ball, laser, spot, calibrations; synthetic or from the reference data set (NF-VLT-21/22)
+    camera_node_sim.py CameraNodeSim      node simulator: Observation + CameraCalibration over UDP; message-level faults (NF-VLT-31)
+    galvo_node_sim.py  GalvoNodeSim       node simulator: receives Targets, answers GalvoStatus, never drives a laser (NF-VLT-31)
+    control_node_sim.py ControlNodeSim    node simulator: sends scripted Targets (NF-VLT-31)
+    replay.py          Replay             feeds reference data / session recordings with a simulated clock and fault schedule (NF-VLT-21/22, F-VLT-32)
+  tests/                         unit, contract and replay tests (registered in test_tooling.md by synthesis)
+deploy/                          node image and setup scripts (NF-VLT-13/28, registered in deployment.md by synthesis)
+```
+
+### Vertical slices
+
+| Slice | Name | Delivers (requirements) | Depends on | Acceptance |
+| --- | --- | --- | --- | --- |
+| S1 | Walking skeleton, hardware-free | F-VLT-3, F-VLT-4, F-VLT-23, NF-VLT-14, NF-VLT-22, NF-VLT-27; partial F-VLT-5 (GalvoNodeSim), NF-VLT-31 (camera and galvo node simulators) | — | Synthetic swing (Scenario) from three CameraNodeSims → ControlNode → GalvoNodeSim on one PC with SimClock: fused positions within the F-VLT-3 limits, predicted aim within the F-VLT-4 limits, every injected malformed/duplicate/old message rejected (contract tests). Proves the core loop end to end. |
+| S2 | Camera node on hardware | F-VLT-1, F-VLT-2, F-VLT-17, F-VLT-18 (node side), NF-VLT-5, NF-VLT-17, NF-VLT-24 | S1 | First the camera node on SimFrameSource (rendered and recorded frames, image-level faults) on a PC; then one real camera node with PTP feeds the S1 control node: Observations schema-valid at the profile frame rate, exposure-time mapping error measured (LED test) ≤ 0.5 ms, detection stage high-water mark measured; bench checks R-1 and R-2 (camera part) reported. Camera restart rejoins without other restarts. |
+| S3 | Galvo node, safe output chain | F-VLT-5, F-VLT-9, F-VLT-10, F-VLT-15, F-VLT-19, F-VLT-25, F-VLT-30, NF-VLT-3, NF-VLT-16, NF-VLT-25, NF-VLT-30; NF-VLT-31 (control node simulator) | S1 | First the galvo node on ControlNodeSim with SimOutputStream, SimGpio and SimWatchdog (clamp, timeout, epoch, kill-switch and hang tests without hardware); then ControlNodeSim targets drive the real mirrors; photodiode tests of F-VLT-10/15/30, NF-VLT-16/25/30 pass; clamp tests pass; GalvoStatus within 50 ms; bench check R-2 (galvo part) over 10 min reported. |
+| S4 | Calibration and setup | F-VLT-12, F-VLT-13, F-VLT-24, F-VLT-31, NF-VLT-21, NF-VLT-32 | S2, S3 | Full installation: cameras calibrate at start ≤ 10 s with ≤ 0.5 px; galvo scan ≤ 60 s; arming check ≤ 1 s; setup mismatch refused with diagnostic; reference data set recorded and annotated. |
+| S5 | Modes and safety | F-VLT-8, F-VLT-11, F-VLT-16, F-VLT-20, F-VLT-21, F-VLT-22, F-VLT-26, F-VLT-27, F-VLT-28, F-VLT-29, F-VLT-35, F-VLT-41, F-VLT-42 | S4 | Every reaction-matrix row (NF-VLT-34) injected once on the real setup with the expected reaction and log; mode sequence only along the §11 state machine; replay tests for every boundary of §11.2. |
+| S6 | Aiming error, runs and scoring | F-VLT-6, F-VLT-7 | S5 | Reference data set replay: aiming error within 5 mm of the reference; run start/end and hit rate per F-VLT-7 acceptance. |
+| S7 | Monitoring and operation | F-VLT-18 (display), F-VLT-32, F-VLT-33, F-VLT-34, F-VLT-37, F-VLT-38, F-VLT-39, F-VLT-40, NF-VLT-6, NF-VLT-7, NF-VLT-8, NF-VLT-11 | S5, S6 | Dashboard shows every F-VLT-34/37 field; stale node flagged; laptop unplugged/stalled changes nothing in the loop (timing identical within measurement noise); traffic ≤ 20 Mbit/s; recorded session replays to the same decisions; both dry runs. |
+| S8 | Deployment and acceptance | NF-VLT-1, NF-VLT-2, NF-VLT-9, NF-VLT-10, NF-VLT-12, NF-VLT-13, NF-VLT-15, NF-VLT-18, NF-VLT-19, NF-VLT-20, NF-VLT-23, NF-VLT-26, NF-VLT-28, NF-VLT-29, NF-VLT-33, NF-VLT-34 | S7 | Nodes set up from scratch by script; 10-min runs with monitoring off and at maximum; T1 p99 ≤ 30 ms and all shutdown maxima measured independently; fault campaign with ≥ 10 injections per matrix row; 80 % hit rate with three cameras and every camera pair. |
+
+### Module specifications
+
+Pseudocode is Python with type hints. `Ns = int` (shared-clock nanoseconds, int64), `MonoNs = int` (local `CLOCK_MONOTONIC_RAW` nanoseconds, never corrected by the clock synchronization), `Mm = float`, `Px = float`. `Vec3 = tuple[Mm, Mm, Mm]`. Errors are exceptions only at start-up; inside a loop a rejected input is a return value, never an exception that leaves the loop.
+
+#### common/messages.py — MessageCodec
+
+- **Responsibility:** the binding wire format of every loop message: UTF-8 JSON, one message per UDP datagram, ≤ 1400 bytes (Observation, CameraCalibration, Target, GalvoStatus) or ≤ 60 000 bytes (MonitorMessage), int64 values as decimal strings, `schema_version` 1. Decoding checks type, version, required fields, ranges and finiteness; it never raises.
+- **Traces to:** F-VLT-23, F-VLT-24, F-VLT-25, NF-VLT-27
+
+```python
+class Purpose(Enum): TRACK; SCAN; CHECK; IDLE            # Target.purpose, schema addition (see §11.1)
+@dataclass(frozen=True) class Observation: ...            # fields of §10 + camera-observation.schema.json + t_readout_ns, t_detected_ns, t_sent_ns (F-VLT-39)
+@dataclass(frozen=True) class CameraCalibration: ...      # camera-calibration.schema.json
+@dataclass(frozen=True) class Target: ...                 # fields of §10 + session_id, setup_revision, schema_version, purpose: Purpose, t_created_ns: Ns
+@dataclass(frozen=True) class GalvoStatus: ...            # fields of §10 + session_id, setup_revision, schema_version, sync: SyncState
+@dataclass(frozen=True) class MonitorMessage: ...         # §10
+class Rejected(NamedTuple): reason: str                   # 'format' | 'version' | 'field' | 'non_finite' | 'size' | 'sender'
+class MessageCodec:
+    def encode(self, msg: Observation | CameraCalibration | Target | GalvoStatus | MonitorMessage) -> bytes  # raises ValueError if > size limit
+    def decode(self, data: bytes, expected: type) -> Message | Rejected
+```
+
+#### common/sequence.py — SequenceTracker
+
+- **Responsibility:** per sender: adopt a new `session_id`, order `uint32` sequence numbers with wrap (n newer than last iff 0 < (n − last) mod 2³² < 2³¹), reject duplicates, older and half-range values. A new session is reported, never treated as permission to re-arm.
+- **Traces to:** F-VLT-17, F-VLT-23, F-VLT-25
+
+```python
+class Verdict(Enum): NEWER; NEW_SESSION; DUPLICATE; OLDER; INVALID
+class SequenceTracker:
+    def check(self, sender: str, session_id: str, seq: int) -> Verdict   # state updated only on NEWER / NEW_SESSION
+    def session_of(self, sender: str) -> str | None
+```
+
+#### common/udp_link.py — StateLink
+
+- **Responsibility:** state-message channel on one UDP socket: non-blocking send (a full socket buffer drops the message and counts it), and `drain()` that reads every pending datagram, decodes and sequence-checks it, and keeps only the newest valid one per sender. No queue grows across calls; the socket receive buffer is sized to ≤ 2 periods of traffic so a burst is dropped by the kernel, not processed late.
+- **Traces to:** F-VLT-23, NF-VLT-27, NF-VLT-28
+
+```python
+class StateLink:
+    def __init__(self, bind: tuple[str, int], peers: dict[str, tuple[str, int]], codec: MessageCodec, seq: SequenceTracker, rcvbuf_bytes: int)
+    def send(self, peer: str, msg: Message) -> bool                     # False = dropped
+    def drain(self, expected: type, now: Ns) -> DrainResult             # DrainResult(latest: dict[sender, Message], rejected: Counter[str], new_sessions: list[str])
+```
+
+#### common/clock_status.py — ClockStatus
+
+- **Responsibility:** read the shared clock (`CLOCK_REALTIME`, disciplined by `ptp4l` with software timestamping, grandmaster = control node, ADR-VLT-002) and the local monotonic clock; poll `ptp4l` over its management socket every 50 ms in a helper process and publish offset, state and poll time through shared memory. `synced` is true only if |offset| ≤ `clock_sync_limit_ms` (0.5 ms) and the status is younger than `sync_status_max_age_ms` (100 ms). No other time service runs (NF-VLT-28).
+- **Traces to:** F-VLT-18, F-VLT-20, F-VLT-22, NF-VLT-5, NF-VLT-20, NF-VLT-24
+
+```python
+class SyncState(NamedTuple): synced: bool; offset_ns: int; status_age_ns: int
+class ClockStatus:
+    def now(self) -> Ns                       # shared clock
+    def mono(self) -> MonoNs                  # local timeouts only
+    def sync(self) -> SyncState               # read from shared memory, never blocks
+```
+
+#### common/config.py — Config
+
+- **Responsibility:** load the installation's configuration file (TOML, one per installation, read once at start; ADR-VLT-014), check each key's type and range (§10 table plus the keys of §11.2), and the cross-field rules: observation age + placement lead ≤ prediction horizon; target expiry ≤ `laser_timeout_ms`; `run_start_amplitude_mm` > `run_end_amplitude_mm`; demo profile values fixed (§10). Invalid configuration → `ConfigError` with the key and rule; the node stays in its ground state with the laser off and logs the diagnostic.
+- **Traces to:** F-VLT-24, F-VLT-33, F-VLT-41, NF-VLT-10
+
+```python
+class ConfigError(Exception): key: str; rule: str
+class Config:
+    @staticmethod
+    def load(path: Path, node: str) -> "Config"         # raises ConfigError
+    def get(self, key: str) -> Any
+    profile: Literal['demo', 'test']; dry_run: Literal['none', 'laser_disabled', 'galvo_disabled']; record_session: bool
+```
+
+#### common/setup_identity.py — SetupIdentity
+
+- **Responsibility:** compute `setup_revision` = SHA-256 (first 16 hex digits) of the canonical manifest: configuration (without per-node keys), marker map, camera profile; load and check calibration files (schema version, `setup_revision`, units/convention, `camera_id`, image mode, finite values) and give each a `calibration_id` = hash of its content.
+- **Traces to:** F-VLT-24
+
+```python
+class SetupError(Exception): file: str; reason: str
+class SetupIdentity:
+    def __init__(self, config: Config, marker_map: Path, camera_profile: Path)
+    revision: str
+    def load_camera_calibration(self, path: Path, camera_id: int) -> CameraCalibration    # raises SetupError
+    def load_galvo_calibration(self, path: Path) -> GalvoModel | None                    # None = missing; raises SetupError if corrupt
+    def store(self, path: Path, data: CameraCalibration | GalvoModel) -> str              # writes atomically, returns calibration_id
+```
+
+#### common/geometry.py — CubeGeometry
+
+- **Responsibility:** the cube volume in cube coordinates (§2): contains, clamp to the volume, signed distance outside the volume, distance from a point to a line.
+- **Traces to:** F-VLT-6, F-VLT-9, F-VLT-26
+
+```python
+class CubeGeometry:
+    def __init__(self, size: Vec3)                  # cube_size_mm (OQ-3, proposal 800 × 800 × 800)
+    def contains(self, p: Vec3) -> bool
+    def clamp(self, p: Vec3) -> Vec3
+    def outside_distance(self, p: Vec3) -> Mm        # 0 inside
+    def point_line_distance(self, p: Vec3, origin: Vec3, through: Vec3) -> Mm
+```
+
+#### common/camera_model.py — CameraModel
+
+- **Responsibility:** pinhole model with Brown distortion for one camera from a `CameraCalibration`: project a cube point to pixels, undistort a pixel and return the ray in cube coordinates, intersect a ray with a sphere.
+- **Traces to:** F-VLT-3, F-VLT-6, F-VLT-12, F-VLT-27
+
+```python
+class Ray(NamedTuple): origin: Vec3; direction: Vec3       # unit direction
+class CameraModel:
+    def __init__(self, cal: CameraCalibration)
+    def project(self, p: Vec3) -> tuple[Px, Px]
+    def ray(self, u: Px, v: Px) -> Ray
+    def near_sphere_hit(self, ray: Ray, centre: Vec3, radius: Mm) -> Vec3 | None
+```
+
+#### common/galvo_model.py — GalvoModel
+
+- **Responsibility:** physical two-mirror model (galvo origin, mirror spacing, scale and offset per axis, ADR-VLT-012): cube point → mirror angles → DAC sample values (int32 for the PCM5102A, clipped to the driver's input range, F-VLT-15) and back; beam line for a commanded angle pair; the angle envelope of the cube (F-VLT-9); fit from scan points (Gauss–Newton, NumPy only).
+- **Traces to:** F-VLT-5, F-VLT-6, F-VLT-9, F-VLT-13, F-VLT-15, NF-VLT-32
+
+```python
+class GalvoModel:
+    origin: Vec3; params: np.ndarray; envelope: tuple[float, float, float, float]   # x/y angle limits of the cube (rad)
+    def angles(self, p: Vec3) -> tuple[float, float]              # clipped to envelope
+    def samples(self, ax: float, ay: float) -> tuple[int, int]    # DAC codes, clipped to driver range
+    def beam(self, ax: float, ay: float) -> Ray
+    @staticmethod
+    def fit(points: list[tuple[tuple[float, float], Vec3]], initial: "GalvoModel") -> tuple["GalvoModel", Mm]   # model, RMS residual
+```
+
+#### common/event_log.py — EventLog
+
+- **Responsibility:** non-blocking local log: the loop puts an event (shared time, local time, kind, fields) into a bounded `multiprocessing` queue with `put_nowait`; a writer process appends JSON lines. Full queue → event dropped and a drop counter logged later. File size per session bounded (`log_max_mb`, default 50); at the bound only mode and safety events are still written.
+- **Traces to:** F-VLT-29, F-VLT-40, NF-VLT-6
+
+```python
+class EventLog:
+    def __init__(self, path: Path, clock: ClockStatus, max_mb: int, queue_len: int = 1024)
+    def event(self, kind: str, **fields) -> None        # never blocks
+    dropped: int
+```
+
+#### common/monitor_link.py — MonitorLink
+
+- **Responsibility:** push monitoring data to the laptop: the loop calls `push()` (bounded queue, `put_nowait`, drop on full); a sender process encodes and sends UDP datagrams to `monitor_host`, rate-limited (status ≤ 20 Hz per node, images ≤ `monitor_image_rate_hz` at ≤ 320 × 240 JPEG), so the total stays ≤ 20 Mbit/s. Without `monitor_host` the sender is not started. No message is received from the laptop.
+- **Traces to:** NF-VLT-6, NF-VLT-7, NF-VLT-8, NF-VLT-10, NF-VLT-11
+
+```python
+class MonitorLink:
+    def __init__(self, config: Config, node: str, clock: ClockStatus)
+    def push(self, kind: str, payload: dict | bytes) -> None   # never blocks
+```
+
+#### common/node_health.py — NodeHealth
+
+- **Responsibility:** sample CPU (average over 1 s), RAM, software version (git commit of the deployed tree), setup revision, clock state, loop high-water marks and drop counters, once per second, outside the loop process.
+- **Traces to:** F-VLT-37, NF-VLT-19, NF-VLT-33
+
+```python
+class NodeHealth:
+    def sample(self) -> dict      # pushed as MonitorMessage kind='status'
+```
+
+#### common/rt_loop.py — RtLoop
+
+- **Responsibility:** run a callback periodically, aligned to the shared clock (or, for the galvo output, paced by the ALSA buffer); set `SCHED_FIFO` priority and pin the process to one core; disable automatic garbage collection and run `gc.collect(0)` only in the slack after a callback; record per-callback execution time and wake-up lateness as high-water marks and histograms (ADR-VLT-023). A period overrun is counted, never queued: the next slot is the next grid point.
+- **Traces to:** NF-VLT-18, NF-VLT-19, NF-VLT-33, ADR-VLT-009
+
+```python
+class RtLoop:
+    def __init__(self, clock: ClockStatus, period_ns: int, phase_ns: int, priority: int, cpu: int)
+    def run(self, step: Callable[[int, Ns], None]) -> NoReturn    # step(slot_index, t_slot)
+    stats: LoopStats    # wcet_hwm_ns, late_hwm_ns, overruns
+```
+
+#### camera/frame_source.py — FrameSource
+
+- **Responsibility:** configure picamera2 for profile VLT-CAM-1 (ADR-VLT-020): low-resolution stream for detection, bounded auto exposure/gain/white balance for ≤ 5 s, then lock until restart; keep one frame buffer (newest complete frame, never a backlog). Map the sensor timestamp (`SensorTimestamp`, local monotonic, start of exposure of the first row) to the shared clock: `t_exposure_ns` = shared(sensor_ts + exposure/2 + row_time × rows/2), with `row_time` measured once per mode (LED test, ADR-VLT-020). Provide per-row exposure time for rolling-shutter rectification.
+- **Traces to:** F-VLT-1, F-VLT-12, F-VLT-39, NF-VLT-17, ADR-VLT-020
+
+```python
+class Frame(NamedTuple): seq: int; image: np.ndarray; t_exposure_ns: Ns; t_readout_ns: Ns; exposure_us: int; analogue_gain: float
+class FrameSource:
+    def __init__(self, profile: dict, clock: ClockStatus)
+    def start(self) -> None                          # raises CameraError (no camera, wrong mode)
+    def next_frame(self, timeout_ms: int) -> Frame | None
+    def row_time_ns(self, v: Px) -> int              # exposure time offset of image row v vs. frame mid
+    def full_frame(self) -> np.ndarray               # for calibration and pose check only
+```
+
+#### camera/detector.py — Detector
+
+- **Responsibility:** find the ball disc (matte white, against grey background: threshold on luma, largest round component, centre and radius by moments) and the laser spot (red, small, saturated: red-channel excess, brightest compact blob; may lie inside the ball disc) in one frame, vectorised NumPy/OpenCV only. Return the sample time of each from its row. Rectify both positions to frame-mid time using the row time (rolling shutter).
+- **Traces to:** F-VLT-1, F-VLT-2, NF-VLT-17, ADR-VLT-020, ADR-VLT-023
+
+```python
+class Detection(NamedTuple): ball: tuple[Px, Px, Px] | None; spot: tuple[Px, Px] | None; t_ball_sample_ns: Ns | None; t_spot_sample_ns: Ns | None
+class Detector:
+    def __init__(self, profile: dict)
+    def detect(self, frame: Frame, row_time: Callable[[Px], int]) -> Detection
+```
+
+#### camera/calibrator.py — Calibrator
+
+- **Responsibility:** at start: detect ArUco markers of the marker map on full frames, collect ≥ 4 markers on ≥ 2 planes (ADR-VLT-020 proposal), estimate intrinsics (initial guess from the profile) and pose with `cv2.calibrateCamera` / `solvePnP`, accept only reprojection error ≤ 0.5 px, within ≤ 10 s.
+- **Traces to:** F-VLT-12, F-VLT-24
+
+```python
+class CalibrationFailed(Exception): reason: str        # 'too_few_markers' | 'residual' | 'timeout'
+class Calibrator:
+    def __init__(self, marker_map: MarkerMap, profile: dict, camera_id: int)
+    def calibrate(self, frames: Iterator[np.ndarray], deadline: MonoNs) -> CameraCalibration    # raises CalibrationFailed
+```
+
+#### camera/pose_checker.py — PoseChecker
+
+- **Responsibility:** in a separate low-priority process, once per `pose_check_period_s` (1 s): detect the visible markers and compute their reprojection error against the current calibration; > `pose_check_max_error_px` (2 px) → `moved`. The camera node then reports itself not calibrated (no Observation counts, F-VLT-11) and logs the diagnostic until restart.
+- **Traces to:** F-VLT-12
+
+```python
+class PoseChecker:
+    def check(self, image: np.ndarray, cal: CameraCalibration) -> tuple[bool, Px]   # (ok, error)
+```
+
+#### camera/camera_node.py — CameraNode
+
+- **Responsibility:** node main. Ground state → load config and setup → start FrameSource → calibrate → loop: per frame detect, build Observation (with `session_id` = random 64-bit at start, `frame_seq`, `calibration_id`, `synced` from ClockStatus, stage timestamps), send to the control node; send CameraCalibration every 500 ms; feed PoseChecker one frame per second; push an image ≤ 5/s to MonitorLink. A camera node never stops sending observations because of its own state: an unsynced or uncalibrated node sends with `synced` false or without a validated calibration, and the control node decides.
+- **Traces to:** F-VLT-1, F-VLT-2, F-VLT-12, F-VLT-17, F-VLT-28, F-VLT-38, NF-VLT-10
+
+```python
+class CameraNode:
+    def __init__(self, config: Config, setup: SetupIdentity, clock: ClockStatus, link: StateLink, log: EventLog, monitor: MonitorLink)
+    def run(self) -> NoReturn
+```
+
+#### control/validity_gate.py — ValidityGate
+
+- **Responsibility:** at each fusion slot, from the drained latest Observation and CameraCalibration per camera: a camera's observation is *usable* if its schema, session and sequence are valid, its `setup_revision` equals ours, its `calibration_id` matches a validated CameraCalibration, it is synced with a fresh sync status, its age at the slot is ≤ `observation_max_age_ms` (25 ms) and not more than 2 ms in the future, and its exposure time is within `exposure_skew_max_ms` (20 ms) of the newest usable one. Reports per camera the status *absent / unsynced / present_no_ball / present_ball* (F-VLT-11).
+- **Traces to:** F-VLT-11, F-VLT-20, F-VLT-22, F-VLT-23, F-VLT-24
+
+```python
+class CamStatus(Enum): ABSENT; UNSYNCED; PRESENT_NO_BALL; PRESENT_BALL
+class GateResult(NamedTuple): usable: dict[int, Observation]; status: dict[int, CamStatus]; excluded: dict[int, str]
+class ValidityGate:
+    def __init__(self, config: Config, setup_revision: str)
+    def accept_calibration(self, cal: CameraCalibration) -> bool
+    def evaluate(self, latest: dict[int, Observation], t_slot: Ns) -> GateResult
+```
+
+#### control/triangulator.py — Triangulator
+
+- **Responsibility:** compute the ball centre at one instant `t_fuse` (newest usable exposure time) from the rays of ≥ 2 cameras that see the ball. Each ray is shifted by the predictor's current velocity × (t_fuse − t_ball_sample_i), so samples taken at different times meet (F-VLT-3). Least-squares intersection of the rays. With three cameras: reproject into each camera; if one camera's reprojection error > `plausibility_px` (10 px) while the other two agree within it, exclude that camera for this update (F-VLT-27). Result outside the cube volume → no ball state.
+- **Traces to:** F-VLT-3, F-VLT-11, F-VLT-27
+
+```python
+class Fix(NamedTuple): position: Vec3; t_fuse: Ns; cameras: frozenset[int]; residual_px: float; excluded: frozenset[int]
+class Triangulator:
+    def __init__(self, cameras: dict[int, CameraModel], cube: CubeGeometry, plausibility_px: float)
+    def fuse(self, usable: dict[int, Observation], velocity: Vec3) -> Fix | None
+```
+
+#### control/predictor.py — Predictor
+
+- **Responsibility:** 9-state constant-acceleration Kalman filter in cube coordinates (no pendulum model, ADR-VLT-011); update with a Fix at `t_fuse`; predict position, velocity and acceleration to `t_place`. Reset after a gap > `ball_loss_grace_ms` (1 s) or on a new arming.
+- **Traces to:** F-VLT-4, ADR-VLT-011
+
+```python
+class Kinematic(NamedTuple): p: Vec3; v: Vec3; a: Vec3; t: Ns
+class Predictor:
+    def update(self, fix: Fix) -> None
+    def predict(self, t: Ns) -> Kinematic | None      # None before 2 updates or after reset
+    def velocity(self) -> Vec3                          # zero if unknown
+    def reset(self) -> None
+```
+
+#### control/target_builder.py — TargetBuilder
+
+- **Responsibility:** build one Target per slot: `t_place` = t_slot + `placement_lead_ms` (5 ms); `t_source` = oldest exposure used; `t_valid_until` = min(t_place + fusion period + g, t_source + `prediction_horizon_max_ms`) — see finding A-1; `laser_on` only if the mode allows it (ModeMachine), a ball state exists and the target is valid at t_place; `purpose`, `arm_epoch`. A target whose t_place is already past its validity is not sent and counts as a miss (NF-VLT-18).
+- **Traces to:** F-VLT-5, F-VLT-8, F-VLT-22, NF-VLT-18, ADR-VLT-009
+
+```python
+class TargetBuilder:
+    def __init__(self, config: Config, session_id: str, setup_revision: str)
+    def track(self, k: Kinematic, t_slot: Ns, t_source: Ns, laser: bool, epoch: int) -> Target | None
+    def static(self, p: Vec3, t_slot: Ns, purpose: Purpose, laser: bool, epoch: int, dwell_ms: int) -> Target
+    def idle(self, t_slot: Ns) -> Target       # laser off, centre, keeps the galvo timeout fed while not armed
+```
+
+#### control/effect_supervisor.py — EffectSupervisor
+
+- **Responsibility:** the effect of the actuator. Per slot: spot in 3D (near intersection of a camera's spot ray with the ball sphere when the spot is inside the ball disc, else triangulated from ≥ 2 cameras off the ball, ADR-VLT-005); aiming error = distance from the fused ball centre to the beam line (galvo origin → spot); hit per camera per F-VLT-7 (only the observation with the exposure time closest to the update time and at most one frame period away, which is stricter than the 25 ms gate); alarms: spot > `spot_outside_cube_mm` (20 mm) outside the cube while armed (T3); spot in a frame exposed after laser-off + `laser_switch_off_delay_ms` + one frame period (F-VLT-16); aiming error > 50 mm for 500 ms from the first such exposure (T6, F-VLT-26). Optical-effect watchdog (F-VLT-42): local monotonic deadline started at the first laser-on placement, refreshed only by a valid measurement (tracking: valid aiming error; scan/check: spot located by ≥ 2 cameras), 500 ms; expiry is sticky until the laser is off.
+- **Traces to:** F-VLT-6, F-VLT-7 (hit), F-VLT-16, F-VLT-26, F-VLT-42, ADR-VLT-005/018/019
+
+```python
+class Effect(NamedTuple): spot: Vec3 | None; aiming_error_mm: Mm | None; hit: bool; alarm: str | None; watchdog_expired: bool
+class EffectSupervisor:
+    def __init__(self, config: Config, cameras: dict[int, CameraModel], galvo: GalvoModel, cube: CubeGeometry, clock: ClockStatus)
+    def laser_state(self, status: GalvoStatus) -> None                 # actual on/off, t_laser_change_ns (F-VLT-25)
+    def evaluate(self, usable: dict[int, Observation], ball: Fix | None, mode: Mode) -> Effect
+```
+
+#### control/run_scorer.py — RunScorer
+
+- **Responsibility:** F-VLT-7: rest position (stored, adapted when still for 3 s within 30 mm), release detection, end by amplitude < 50 mm over the last ≈ 2 s, per-update hit/miss/gap accounting, outcome (completed / aborted by safe state), RunResult to log and monitor.
+- **Traces to:** F-VLT-7, NF-VLT-1, ADR-VLT-006
+
+```python
+class RunResult(NamedTuple): t_start: Ns; t_end: Ns; duration_s: float; hit_s: float; gap_s: float; hit_rate: float; outcome: Literal['completed', 'aborted']
+class RunScorer:
+    def __init__(self, config: Config)
+    def update(self, t: Ns, ball: Kinematic | None, effect: Effect, laser_on: bool, safe: bool) -> RunResult | None
+    rest_known: bool
+```
+
+#### control/mode_machine.py — ModeMachine
+
+- **Responsibility:** the only owner of the operating mode (F-VLT-41), the arming rule (F-VLT-35), safety faults and the latch (F-VLT-21), the ball-loss grace (F-VLT-11), galvo-scan attempts (F-VLT-13) and `arm_epoch`. Inputs are facts per slot; output is the mode and what the laser may do. Every transition is logged (F-VLT-29) and pushed. Transitions: see *State machine*.
+- **Traces to:** F-VLT-8, F-VLT-11, F-VLT-13, F-VLT-20, F-VLT-21, F-VLT-25, F-VLT-28, F-VLT-30, F-VLT-31, F-VLT-35, F-VLT-41, NF-VLT-10
+
+```python
+class Mode(Enum): START; CALIBRATING_GALVO; READY; ARMING_CHECK; TRACKING; SAFE
+class Facts(NamedTuple): t: Ns; mono: MonoNs; setup_valid: bool; galvo_cal_valid: bool; cams: dict[int, CamStatus]
+                         galvo: GalvoStatus | None; galvo_new_session: bool; galvo_synced: bool; kill_pressed: bool
+                         effect: Effect; scan: ScanOutcome | None; check: ScanOutcome | None
+class Decision(NamedTuple): mode: Mode; degraded: bool; latched: bool; laser_allowed: bool; purpose: Purpose; epoch: int; reason: str | None
+class ModeMachine:
+    def __init__(self, config: Config, log: EventLog)
+    def step(self, f: Facts) -> Decision
+```
+
+#### control/galvo_calibration.py — GalvoCalibration
+
+- **Responsibility:** the galvo scan (grid of points on floor and walls inside the angle envelope, one static target per point, dwell until ≥ 2 cameras locate the spot or the point times out; fit `GalvoModel`; accept if residual ≤ `galvo_fit_max_residual_mm`, 3 mm (Gate 2); ≤ 60 s) and the arming check (3 points, ≤ 250 ms each, replaced if hidden by the ball, each within 5 mm, ≤ 1 s). Driven by ModeMachine; the laser is requested only through Targets with purpose SCAN/CHECK.
+- **Traces to:** F-VLT-13, F-VLT-31, F-VLT-42, NF-VLT-32
+
+```python
+class ScanOutcome(NamedTuple): ok: bool; reason: str | None; model: GalvoModel | None; residual_mm: Mm | None
+class GalvoCalibration:
+    def __init__(self, config: Config, cube: CubeGeometry, current: GalvoModel | None)
+    def start_scan(self, t: Ns) -> None
+    def start_check(self, t: Ns, ball: Vec3 | None) -> None
+    def step(self, t: Ns, spot3d: Vec3 | None) -> tuple[Vec3 | None, ScanOutcome | None]    # next aim point, outcome when finished
+    def abort(self) -> None
+```
+
+#### control/session_recorder.py — SessionRecorder
+
+- **Responsibility:** if `record_session` is set, write every drained message, every Target, every Decision and Effect with timestamps to a bounded binary log via a writer process (same non-blocking pattern as EventLog). Replay reads it back.
+- **Traces to:** F-VLT-32, NF-VLT-22
+
+```python
+class SessionRecorder:
+    def record(self, kind: str, t: Ns, obj: object) -> None      # never blocks
+```
+
+#### control/chain_stats.py — ChainStats
+
+- **Responsibility:** per position update the stage delays exposure → readout → detected → sent → received → fused → target sent → applied (from Observation, the control node and GalvoStatus timestamps); min/max/mean/jitter/p50/p95/p99 over the last second, the run and the session; stage shares and histogram; saved per run.
+- **Traces to:** F-VLT-39, NF-VLT-18, NF-VLT-33
+
+```python
+class ChainStats:
+    def add(self, obs: dict[int, Observation], t_received: dict[int, Ns], t_fused: Ns, target: Target | None) -> None
+    def applied(self, status: GalvoStatus) -> None
+    def snapshot(self, window: Literal['1s', 'run', 'session']) -> dict
+```
+
+#### control/control_node.py — ControlNode
+
+- **Responsibility:** node main; PTP grandmaster. Ground state; load config, setup and calibrations; one RtLoop with period `fusion_period_ms` (10 ms), phase 0. Each slot, in this order: drain links → ValidityGate → Triangulator → Predictor → EffectSupervisor → GalvoCalibration (if scanning/checking) → ModeMachine → TargetBuilder → send Target → RunScorer, ChainStats, SessionRecorder, MonitorLink (non-blocking). A Target is sent every slot in every mode (idle target when the laser is not allowed), so the galvo timeout tells "control alive" apart from "control dead".
+- **Traces to:** F-VLT-3, F-VLT-28, F-VLT-33, NF-VLT-10, ADR-VLT-009
+
+```python
+class ControlNode:
+    def __init__(self, config: Config, setup: SetupIdentity, clock: ClockStatus, cam_link: StateLink, galvo_link: StateLink, log: EventLog, monitor: MonitorLink)
+    def step(self, slot: int, t_slot: Ns) -> None
+    def run(self) -> NoReturn
+```
+
+#### galvo/target_guard.py — TargetGuard
+
+- **Responsibility:** accept a Target only if valid (schema, session/sequence, setup, finite, transport age ≤ `target_transport_max_age_ms`, not expired); hold the current and next target; `current(t)` returns the target to use at shared time t (the newest with t_place ≤ t + one block, not expired) or None. Local timeout: no fresh valid target for `laser_timeout_ms` (100 ms, local monotonic clock) → `timed_out`. Invalid messages never refresh it.
+- **Traces to:** F-VLT-5, F-VLT-10, F-VLT-22, F-VLT-23
+
+```python
+class TargetGuard:
+    def __init__(self, config: Config, setup_revision: str, clock: ClockStatus)
+    def offer(self, target: Target, mono_received: MonoNs) -> bool
+    def current(self, t: Ns) -> Target | None
+    def timed_out(self, mono: MonoNs) -> bool
+    def control_session(self) -> str | None
+```
+
+#### galvo/laser_policy.py — LaserPolicy
+
+- **Responsibility:** decide the laser request of the galvo node: on only if the current target says `laser_on`, its `arm_epoch` is newer than the blocked epoch of the current control session, the node is synced, the kill switch is released, the output stream is healthy and the dry run is not *laser disabled*. Every local safety fault (timeout, kill switch, underrun, non-finite, sync loss) blocks the current epoch; a new control session blocks its first seen epoch. Keeps `laser_off_reason`.
+- **Traces to:** F-VLT-8, F-VLT-10, F-VLT-20, F-VLT-21, F-VLT-30, F-VLT-33
+
+```python
+class LaserPolicy:
+    def decide(self, target: Target | None, synced: bool, kill: bool, stream_ok: bool, timed_out: bool) -> tuple[bool, str | None]
+    def block(self, reason: str) -> None
+```
+
+#### galvo/output_stream.py — OutputStream
+
+- **Responsibility:** write the DAC stream through ALSA (`pyalsaaudio`, 48 kHz stereo, period = `galvo_block_ms` 0.5 ms = 24 frames, buffer 4 periods): for each block compute its play time (now + ALSA delay) and the aim for each sample by interpolating the current target (p + v·dt + ½a·dt², clamped to the cube, F-VLT-9), convert through GalvoModel to samples. No valid target → centre. An underrun (xrun) or write error → `stream_ok` false for ≥ 1 block and the laser request off. Galvo disabled (dry run) → centre only.
+- **Traces to:** F-VLT-5, F-VLT-9, F-VLT-15, F-VLT-33, ADR-VLT-023
+
+```python
+class OutputStream:
+    def __init__(self, config: Config, model: GalvoModel, cube: CubeGeometry)
+    def write_block(self, target: Target | None, t_play: Ns) -> bool        # False = underrun/error
+    def delay_ns(self) -> int
+    def centre(self) -> None
+```
+
+#### galvo/laser_guard.py — LaserGuard
+
+- **Responsibility:** separate RT process, the only owner of the laser-enable GPIO and the kill-switch sense GPIO. Every 1 ms: read the kill switch (pull-up, open wire = pressed, debounce 2 ms); drive enable = request ∧ output-loop heartbeat age ≤ `laser_guard_heartbeat_ms` (20 ms) ∧ ¬kill. Publishes kill state and its own heartbeat via shared memory. Hardware (NF-VLT-25): enable pin with external pull-down, boot default low; kill switch in series with the laser supply (NF-VLT-3).
+- **Traces to:** F-VLT-15, F-VLT-30, NF-VLT-3, NF-VLT-16, NF-VLT-25
+
+```python
+class LaserGuard:
+    def __init__(self, enable: OutputPin, kill: InputPin, shm: SharedState)   # real pins (BCM numbers from Config) or SimGpio
+    def run(self) -> NoReturn
+```
+
+#### galvo/hw_watchdog.py — HwWatchdog
+
+- **Responsibility:** open `/dev/watchdog` with timeout `galvo_watchdog_s` (1 s); `feed()` is called by the output loop only while the LaserGuard heartbeat is fresh, so a hang of either process stops the feeding. Magic close is disabled.
+- **Traces to:** NF-VLT-30, ADR-VLT-010
+
+```python
+class HwWatchdog:
+    def __init__(self, timeout_s: int)
+    def feed(self) -> None
+```
+
+#### galvo/galvo_node.py — GalvoNode
+
+- **Responsibility:** node main. Ground state (enable low, DAC centre); load config, setup, galvo calibration; start LaserGuard; output loop paced by ALSA: drain targets (non-blocking) → TargetGuard → LaserPolicy → OutputStream.write_block → laser request and heartbeat to shared memory → watchdog feed → GalvoStatus on each newly applied target and at least every 50 ms. A `session_id` per start lets the control node see a restart (F-VLT-25). Controlled shutdown (SIGTERM): laser off, centre, then exit.
+- **Traces to:** F-VLT-5, F-VLT-10, F-VLT-15, F-VLT-25, F-VLT-28, NF-VLT-10, NF-VLT-30
+
+```python
+class GalvoNode:
+    def __init__(self, config: Config, setup: SetupIdentity, clock: ClockStatus, link: StateLink, log: EventLog, monitor: MonitorLink)
+    def run(self) -> NoReturn
+```
+
+#### monitor/monitor_server.py — MonitorServer
+
+- **Responsibility:** on the laptop: receive MonitorMessages (UDP), keep the latest per node and kind and a short history of diagnostics; flag a node stale when nothing arrived for 1 s; serve the dashboard (HTTP + server-sent events, stdlib only) with live state, health overview, chain statistics, run results, the current camera images with overlays (drawn in the browser from overlay data). Images are kept in memory only (`store_images` false by default). Sends nothing to the nodes.
+- **Traces to:** F-VLT-18, F-VLT-34, F-VLT-37, F-VLT-38, F-VLT-39, F-VLT-40, NF-VLT-7, NF-VLT-10, NF-VLT-11
+
+```python
+class MonitorServer:
+    def __init__(self, bind_udp: tuple[str, int], bind_http: tuple[str, int], stale_after_s: float = 1.0)
+    def serve_forever(self) -> None
+```
+
+#### common/sim_clock.py — SimClock
+
+- **Responsibility:** hardware simulator for `ClockStatus` (same interface): shared and monotonic time advanced by the test or by Replay; settable clock offset, sync loss, status age and clock steps (the shared clock may step, the monotonic clock never does).
+- **Traces to:** NF-VLT-22, F-VLT-20, F-VLT-22
+
+```python
+class SimClock:                                  # interface of ClockStatus: now(), mono(), sync()
+    def __init__(self, t0: Ns = 0)
+    def advance(self, dt_ns: int) -> None
+    def step_shared(self, dt_ns: int) -> None    # clock correction; mono unchanged
+    def set_sync(self, synced: bool, offset_ns: int = 0) -> None
+```
+
+#### camera/sim_camera.py — SimFrameSource
+
+- **Responsibility:** hardware simulator for `FrameSource` (same interface), for the camera team. Frames come from a `Scenario`: rendered (grey background, white ball disc, red spot, ArUco markers at the marker-map positions, through `CameraModel` with the profile resolution and row timing) or played from the reference data set's lossless frames with their `t_exposure_ns`. Image-level faults: no ball, second blob, spot only, moved camera (markers shifted), exposure change, dropped or late frames.
+- **Traces to:** NF-VLT-22, NF-VLT-21, F-VLT-1, F-VLT-2, F-VLT-12
+
+```python
+class SimFrameSource:                            # interface of FrameSource: start(), next_frame(), row_time_ns(), full_frame()
+    def __init__(self, scenario: Scenario, camera_id: int, profile: dict, clock: ClockStatus | SimClock, faults: ImageFaults | None = None)
+```
+
+#### galvo/sim_galvo_hw.py — SimOutputStream, SimGpio, SimWatchdog
+
+- **Responsibility:** hardware simulators for the galvo node, for the laser team. `SimOutputStream` (interface of `OutputStream`) records every block with its play time and converts the samples back to aim points through `GalvoModel`; it can inject underruns. `SimGpio` provides the laser-enable output and the kill-switch input that `LaserGuard` receives (press, release, open wire) and records every enable transition with its time. `SimWatchdog` (interface of `HwWatchdog`) records feeds and reports when the SoC would have reset.
+- **Traces to:** NF-VLT-22, F-VLT-5, F-VLT-9, F-VLT-10, F-VLT-15, F-VLT-30, NF-VLT-30
+
+```python
+class SimOutputStream:                           # interface of OutputStream
+    def __init__(self, model: GalvoModel, cube: CubeGeometry, clock: ClockStatus | SimClock)
+    def inject_underrun(self, blocks: int) -> None
+    aims: list[tuple[Ns, Vec3]]                   # recorded play time and aim point
+class SimGpio:
+    enable: OutputPin; kill: InputPin             # handed to LaserGuard instead of the real pins
+    def press_kill(self) -> None; def release_kill(self) -> None; def open_kill_wire(self) -> None
+    transitions: list[tuple[MonoNs, bool]]
+class SimWatchdog:                               # interface of HwWatchdog
+    def __init__(self, timeout_s: int, clock: ClockStatus | SimClock)
+    def would_reset_at(self) -> MonoNs
+```
+
+#### sim/scenario.py — Scenario
+
+- **Responsibility:** one ground truth for both camera simulators: ball trajectory (synthetic swing in the NF-VLT-1 envelope, or the reference data set), laser on/off and spot position, camera calibrations. Both `SimFrameSource` and `CameraNodeSim` read the same Scenario, so camera and control teams test against the same truth.
+- **Traces to:** NF-VLT-21, NF-VLT-22
+
+```python
+class Scenario:
+    @staticmethod
+    def swing(release_mm: Mm, duration_s: float, seed: int) -> "Scenario"
+    @staticmethod
+    def from_reference(path: Path) -> "Scenario"
+    def ball(self, t: Ns) -> Vec3 | None
+    def spot(self, t: Ns) -> Vec3 | None
+    def laser_on(self, t: Ns) -> bool
+    calibrations: dict[int, CameraCalibration]
+```
+
+#### sim/camera_node_sim.py — CameraNodeSim
+
+- **Responsibility:** node simulator for one camera node, for the control team: sends `Observation` per simulated frame and `CameraCalibration` every 500 ms over UDP, from a `Scenario` (projected through `CameraModel`, no images) or from a recording. Message-level faults: late, missing, malformed, duplicate or reordered messages, session restart, clock offset, sync loss. No camera-node code runs.
+- **Traces to:** NF-VLT-31, NF-VLT-22, F-VLT-23
+
+```python
+class CameraNodeSim:
+    def __init__(self, scenario: Scenario, camera_id: int, link: StateLink, clock: ClockStatus | SimClock, frame_rate_hz: float, faults: MessageFaults | None = None)
+    def run(self, until: Ns) -> None
+```
+
+#### sim/galvo_node_sim.py — GalvoNodeSim
+
+- **Responsibility:** node simulator for the galvo node: receives Targets through the real `TargetGuard` and `LaserPolicy`, answers `GalvoStatus` on each applied target and at least every 50 ms, never drives hardware. Faults: restart (new session), silent status, kill switch pressed.
+- **Traces to:** NF-VLT-31, F-VLT-25
+
+```python
+class GalvoNodeSim:
+    def __init__(self, config: Config, link: StateLink, clock: ClockStatus | SimClock)
+    def run(self, until: Ns) -> None
+    applied: list[Target]
+```
+
+#### sim/control_node_sim.py — ControlNodeSim
+
+- **Responsibility:** node simulator for the control node: sends scripted Targets (tracking paths, static scan points, laser on/off, epochs, expired or malformed targets, silence) and records GalvoStatus.
+- **Traces to:** NF-VLT-31
+
+```python
+class ControlNodeSim:
+    def __init__(self, script: Path, link: StateLink, clock: ClockStatus | SimClock)
+    def run(self, until: Ns) -> None
+    statuses: list[GalvoStatus]
+```
+
+#### sim/replay.py — Replay
+
+- **Responsibility:** runs `ControlNode.step` offline on recorded inputs (reference data set via Scenario, or a session recording) with `SimClock` and a fault schedule (delays, drops, duplicates, restarts, clock steps), without network, and compares decisions.
+- **Traces to:** NF-VLT-21, NF-VLT-22, F-VLT-32
+
+```python
+class Replay:
+    def __init__(self, source: Path, faults: FaultSchedule | None, config: Config)
+    def run(self) -> ReplayReport          # decisions, targets, effects, run results, mismatches
+```
+
+### Pipeline flow
+
+```mermaid
+flowchart LR
+  subgraph CAM["camera node ×3"]
+    FS[FrameSource] --> DET[Detector] --> CN[CameraNode]
+    CAL[Calibrator] --> CN
+    PC[PoseChecker] -. moved .-> CN
+  end
+  subgraph CTRL["control node (10 ms slot)"]
+    VG[ValidityGate] --> TR[Triangulator] --> PR[Predictor] --> TB[TargetBuilder]
+    VG --> ES[EffectSupervisor]
+    TR --> ES
+    ES --> MM[ModeMachine]
+    GC[GalvoCalibration] <--> MM
+    MM --> TB
+    ES --> RS[RunScorer]
+    TB --> CS[ChainStats]
+  end
+  subgraph GALVO["galvo node"]
+    TG[TargetGuard] --> LP[LaserPolicy] --> OS[OutputStream]
+    LP --> LG[LaserGuard]
+    OS -- heartbeat --> LG
+    OS --> WD[HwWatchdog]
+  end
+  CN -- "Observation / CameraCalibration (UDP)" --> VG
+  TB -- "Target (UDP)" --> TG
+  GALVO -- "GalvoStatus (UDP)" --> ES
+  GALVO -- GalvoStatus --> MM
+  OS -- "I2S" --> DAC[PCM5102A] --> DRV[galvo driver] --> MIR[mirrors]
+  LG -- "enable GPIO" --> LAS[laser supply switch]
+  KS[kill switch] -- "cuts supply" --> LAS
+  KS -- "sense GPIO" --> LG
+  CAM -. "MonitorMessage" .-> MON[MonitorServer]
+  CTRL -. MonitorMessage .-> MON
+  GALVO -. MonitorMessage .-> MON
+```
+
+### Inter-module interfaces
+
+| From | To | Call / message | Types | Errors |
+| --- | --- | --- | --- | --- |
+| CameraNode | ControlNode (ValidityGate) | `Observation`, UDP, one per frame | §10 + schema file + stage timestamps; int64 as strings | rejected → dropped, counted (F-VLT-23) |
+| CameraNode | ControlNode (ValidityGate) | `CameraCalibration`, UDP, every 500 ms | camera-calibration.schema.json | unknown/invalid → camera's frames unused |
+| ControlNode (TargetBuilder) | GalvoNode (TargetGuard) | `Target`, UDP, one per slot (10 ms) | §10 + `session_id`, `setup_revision`, `schema_version`, `purpose`, `t_created_ns` | rejected → dropped, timeout not refreshed |
+| GalvoNode | ControlNode (EffectSupervisor, ModeMachine, ChainStats) | `GalvoStatus`, UDP, on each newly applied target and ≥ every 50 ms | §10 + envelope fields + sync state | missing > 100 ms or new session → safety fault |
+| every node | MonitorServer | `MonitorMessage`, UDP, best effort | §10 | dropped silently, counted at sender |
+| ptp4l | ClockStatus | management socket, 50 ms poll | offset ns, port state | no answer → status ages → not synced |
+| GalvoNode output loop | LaserGuard | shared memory: request, heartbeat (MonoNs), kill state | `SharedState` (mmap, fixed layout, single writer per field) | stale heartbeat → enable low |
+| GalvoNode | HwWatchdog | `feed()` | — | no feed for 1 s → SoC reset |
+| ControlNode | ValidityGate → Triangulator → Predictor → EffectSupervisor → ModeMachine → TargetBuilder | in-process calls per slot | signatures above | none raised inside the loop |
+| any loop | EventLog, MonitorLink, SessionRecorder | `put_nowait` into bounded queues | dict | full → dropped, counted |
+
+### State machine
+
+Owner: `control/mode_machine.py`. The galvo node keeps only the epoch block (LaserPolicy) and never changes the mode itself. Camera nodes have no mode beyond calibrated / not calibrated.
+
+```mermaid
+stateDiagram-v2
+  [*] --> START
+  START --> CALIBRATING_GALVO: setup valid, ≥2 cameras calibrated+synced, galvo synced, no valid galvo calibration, scan attempts left, kill released
+  START --> READY: same, galvo calibration valid
+  CALIBRATING_GALVO --> READY: scan ok (model stored)
+  CALIBRATING_GALVO --> CALIBRATING_GALVO: scan failed, attempts left (laser off first)
+  CALIBRATING_GALVO --> SAFE: safety fault / kill switch / attempts exhausted
+  READY --> ARMING_CHECK: kill released, no active or latched fault, setup valid, ≥2 cameras see ball for 2 s
+  ARMING_CHECK --> TRACKING: check passed (arm_epoch + 1)
+  ARMING_CHECK --> CALIBRATING_GALVO: check failed, attempts left
+  ARMING_CHECK --> SAFE: check failed, no attempts left / safety fault / kill switch
+  TRACKING --> SAFE: safety fault (F-VLT-21) / kill switch
+  READY --> SAFE: safety fault / kill switch
+  SAFE --> READY: fault cleared, not latched
+  SAFE --> READY: latched, kill switch pressed and released
+  note right of TRACKING
+    normal (3 cameras) / degraded (2 cameras);
+    laser off while < 2 cameras see the ball, ≤ 1 s grace,
+    then SAFE
+  end note
+```
+
+Laser allowed only in ARMING_CHECK (purpose CHECK), CALIBRATING_GALVO (purpose SCAN) and TRACKING with a valid ball state (purpose TRACK) (F-VLT-41). A control-node restart starts in START with a new session; the galvo node blocks the new session's first epoch, so the laser comes on only after a new arming check (F-VLT-21/25). The arming-epoch counter and the scan-attempt counter live in ModeMachine and are reset only at a control-node start.
+
+### Design for testability
+
+- **Clock seam:** every module gets time from `ClockStatus` (shared and monotonic) or as an argument; tests and Replay inject `common/sim_clock.SimClock`. No module reads the system clock directly.
+- **Pure per-slot core:** ValidityGate, Triangulator, Predictor, EffectSupervisor, ModeMachine, TargetBuilder, RunScorer, TargetGuard and LaserPolicy have no I/O; ControlNode.step is deterministic for given inputs, so a recorded session replays to identical decisions (F-VLT-32, NF-VLT-22).
+- **Hardware seams:** FrameSource, OutputStream, LaserGuard, HwWatchdog and the ptp4l poller are the only modules touching hardware; each has a hardware simulator with the same interface in its node's folder: `camera/sim_camera.SimFrameSource`, `galvo/sim_galvo_hw.SimOutputStream`, `SimGpio`, `SimWatchdog`; the ptp4l poller is covered by `common/sim_clock.SimClock`. The node main receives the real driver or the simulator in its constructor.
+- **Network seam:** StateLink over loopback or an in-memory pair; fault injection wraps it (drop, delay, duplicate, reorder, corrupt).
+- **Deterministic IDs:** `session_id` comes from an injectable generator.
+- **Node simulators (NF-VLT-31):** `sim/` CameraNodeSim, GalvoNodeSim, ControlNodeSim speak the real protocol, so any real node runs against simulated peers. CameraNodeSim and SimFrameSource read the same `sim/scenario.Scenario`, so the camera team (frames → observations) and the control team (observations → targets) test against the same ground truth.
+- **Measurement hooks:** RtLoop high-water marks, ChainStats and drop counters are exposed through NodeHealth for NF-VLT-18/19/33 evidence; the independent instrument (NF-VLT-29) is external.
+
+### Scaling strategy
+
+- **Capacity budget:** one installation (§5). Network per peak (proposal): camera → control 3 × 120 /s × ≤ 1400 B ≈ 4 Mbit/s; CameraCalibration 3 × 2 /s × ≤ 1400 B, negligible; control → galvo 100 /s × ≤ 600 B ≈ 0.5 Mbit/s; GalvoStatus ≤ 100 /s × ≤ 400 B ≈ 0.3 Mbit/s; PTP < 0.1 Mbit/s; monitoring ≤ 20 Mbit/s total (images 3 × 5 /s × ≤ 30 kB ≈ 3.6 Mbit/s plus status). Busiest link: the control node's port, ≤ 10 Mbit/s of 100 Mbit/s (≤ 50 %, NF-VLT-27). CPU: one core per loop process; camera node = capture + detection loop (core 3), pose check (core 2, 1/s), monitoring and logging (cores 0–1).
+- **First bottleneck:** camera-node CPU — detection in Python at 80–120 fps on a Pi 3 (R-1, R-2, NF-VLT-19). **Lever:** lower detection resolution / region of interest around the predicted ball, then lower frame rate within the T1 budget, then a compiled detection kernel (change request). **Trigger:** detection high-water mark > 4 ms or CPU > 75 % in the S2 bench run.
+- **Second bottleneck:** galvo output block jitter (R-2). **Lever:** larger ALSA buffer (output budget 2 ms → up to 3 ms from the reserve), isolated core (`isolcpus`). **Trigger:** any underrun in a 10-min S3 run.
+
+### Requirement traceability matrix
+
+| Requirement | Module(s) | Slice | Test (from 30-synthesis.md) |
+| --- | --- | --- | --- |
+| F-VLT-1 | camera/frame_source, camera/detector, camera/camera_node, common/messages | S2 | filled by synthesis |
+| F-VLT-2 | camera/detector, camera/camera_node | S2 | filled by synthesis |
+| F-VLT-3 | control/validity_gate, control/triangulator, common/camera_model | S1 | filled by synthesis |
+| F-VLT-4 | control/predictor, control/target_builder | S1 | filled by synthesis |
+| F-VLT-5 | galvo/target_guard, galvo/output_stream, common/galvo_model | S3 | filled by synthesis |
+| F-VLT-6 | control/effect_supervisor, common/geometry, common/camera_model, common/galvo_model | S6 | filled by synthesis |
+| F-VLT-7 | control/run_scorer, control/effect_supervisor (hit) | S6 | filled by synthesis |
+| F-VLT-8 | control/mode_machine, control/target_builder, galvo/laser_policy | S5 | filled by synthesis |
+| F-VLT-9 | common/geometry, common/galvo_model, galvo/output_stream | S3 | filled by synthesis |
+| F-VLT-10 | galvo/target_guard, galvo/laser_policy | S3 | filled by synthesis |
+| F-VLT-11 | control/validity_gate, control/mode_machine | S5 | filled by synthesis |
+| F-VLT-12 | camera/calibrator, camera/pose_checker, camera/camera_node | S4 | filled by synthesis |
+| F-VLT-13 | control/galvo_calibration, control/mode_machine, common/galvo_model | S4 | filled by synthesis |
+| F-VLT-14 | deferred (§7) — no module | — | — |
+| F-VLT-15 | galvo/output_stream, galvo/laser_guard, common/galvo_model | S3 | filled by synthesis |
+| F-VLT-16 | control/effect_supervisor | S5 | filled by synthesis |
+| F-VLT-17 | camera/camera_node, common/sequence | S2 | filled by synthesis |
+| F-VLT-18 | common/clock_status, common/node_health, monitor/monitor_server | S2 (nodes), S7 (display) | filled by synthesis |
+| F-VLT-19 | hardware setup (inspection), deploy/ | S3 | filled by synthesis |
+| F-VLT-20 | common/clock_status, control/validity_gate, galvo/laser_policy | S5 | filled by synthesis |
+| F-VLT-21 | control/mode_machine, galvo/laser_policy | S5 | filled by synthesis |
+| F-VLT-22 | control/validity_gate, control/target_builder, galvo/target_guard | S5 | filled by synthesis |
+| F-VLT-23 | common/messages, common/sequence, common/udp_link | S1 | filled by synthesis |
+| F-VLT-24 | common/config, common/setup_identity, control/validity_gate | S4 | filled by synthesis |
+| F-VLT-25 | galvo/galvo_node, control/mode_machine, control/effect_supervisor | S3 | filled by synthesis |
+| F-VLT-26 | control/effect_supervisor, control/mode_machine | S5 | filled by synthesis |
+| F-VLT-27 | control/triangulator | S5 | filled by synthesis |
+| F-VLT-28 | camera/camera_node, control/control_node, galvo/galvo_node, control/mode_machine | S5 | filled by synthesis |
+| F-VLT-29 | common/event_log, control/mode_machine, galvo/galvo_node | S5 | filled by synthesis |
+| F-VLT-30 | galvo/laser_guard, galvo/laser_policy, control/mode_machine | S3 | filled by synthesis |
+| F-VLT-31 | control/galvo_calibration, control/mode_machine | S4 | filled by synthesis |
+| F-VLT-32 | control/session_recorder, sim/replay | S7 | filled by synthesis |
+| F-VLT-33 | common/config, galvo/laser_policy, galvo/output_stream | S7 | filled by synthesis |
+| F-VLT-34 | monitor/monitor_server, monitor/dashboard, common/monitor_link | S7 | filled by synthesis |
+| F-VLT-35 | control/mode_machine | S5 | filled by synthesis |
+| F-VLT-36 | dropped (§7) — no module | — | — |
+| F-VLT-37 | common/node_health, monitor/monitor_server, monitor/dashboard | S7 | filled by synthesis |
+| F-VLT-38 | camera/camera_node (images), monitor/dashboard | S7 | filled by synthesis |
+| F-VLT-39 | control/chain_stats, monitor/dashboard | S7 | filled by synthesis |
+| F-VLT-40 | monitor/monitor_server, common/event_log | S7 | filled by synthesis |
+| F-VLT-41 | control/mode_machine | S5 | filled by synthesis |
+| F-VLT-42 | control/effect_supervisor, control/mode_machine, control/galvo_calibration | S5 | filled by synthesis |
+| NF-VLT-1 | whole loop; control/run_scorer | S8 | filled by synthesis |
+| NF-VLT-2 | laser hardware (inspection) | S8 | filled by synthesis |
+| NF-VLT-3 | kill switch hardware; galvo/laser_guard (sense) | S3 | filled by synthesis |
+| NF-VLT-4 | dropped (§7) — no module | — | — |
+| NF-VLT-5 | common/clock_status, deploy/ (ptp4l) | S2 | filled by synthesis |
+| NF-VLT-6 | common/monitor_link, common/event_log | S7 | filled by synthesis |
+| NF-VLT-7 | common/monitor_link | S7 | filled by synthesis |
+| NF-VLT-8 | common/monitor_link | S7 | filled by synthesis |
+| NF-VLT-9 | acceptance procedure | S8 | filled by synthesis |
+| NF-VLT-10 | all node mains (no command interface), deploy/ (SSH keys) | S8 | filled by synthesis |
+| NF-VLT-11 | monitor/monitor_server | S7 | filled by synthesis |
+| NF-VLT-12 | acceptance procedure | S8 | filled by synthesis |
+| NF-VLT-13 | deploy/ | S8 | filled by synthesis |
+| NF-VLT-14 | module tree | S1 | filled by synthesis |
+| NF-VLT-15 | hardware (given) | S8 | filled by synthesis |
+| NF-VLT-16 | galvo/laser_guard | S3 | filled by synthesis |
+| NF-VLT-17 | camera/detector, setup (ADR-VLT-016) | S2 | filled by synthesis |
+| NF-VLT-18 | common/rt_loop, control/chain_stats, whole chain | S8 | filled by synthesis |
+| NF-VLT-19 | common/node_health, common/rt_loop | S8 | filled by synthesis |
+| NF-VLT-20 | common/clock_status | S8 | filled by synthesis |
+| NF-VLT-21 | sim/scenario, camera/sim_camera, sim/replay, recording tool (test_tooling.md) | S4 | filled by synthesis |
+| NF-VLT-22 | sim/replay, sim/scenario, common/sim_clock, camera/sim_camera (S2), galvo/sim_galvo_hw (S3), pure per-slot core | S1, S2, S3 | filled by synthesis |
+| NF-VLT-23 | fault campaign over all modules | S8 | filled by synthesis |
+| NF-VLT-24 | common/clock_status | S2 | filled by synthesis |
+| NF-VLT-25 | galvo/laser_guard, enable hardware | S3 | filled by synthesis |
+| NF-VLT-26 | §11.2 transactions, all loop modules | S8 | filled by synthesis |
+| NF-VLT-27 | common/udp_link, camera/frame_source (one frame buffer) | S1 | filled by synthesis |
+| NF-VLT-28 | deploy/ | S8 | filled by synthesis |
+| NF-VLT-29 | external instrument, test_tooling.md | S8 | filled by synthesis |
+| NF-VLT-30 | galvo/hw_watchdog, galvo/galvo_node | S3 | filled by synthesis |
+| NF-VLT-31 | sim/camera_node_sim, sim/galvo_node_sim (S1), sim/control_node_sim (S3) | S1, S3 | filled by synthesis |
+| NF-VLT-32 | common/galvo_model (envelope), layout (ADR-VLT-016) | S4 | filled by synthesis |
+| NF-VLT-33 | common/rt_loop, common/node_health | S8 | filled by synthesis |
+| NF-VLT-34 | all detecting modules per reaction matrix | S5 (one each), S8 (campaign) | filled by synthesis |
+
+No orphan modules: every module above appears in at least one row; `sim/control_node_sim` serves NF-VLT-31, the hardware simulators NF-VLT-22, `common/rt_loop` NF-VLT-33.
 
 ### 11.1 Interfaces and messages — camera handoff (proposed, ADR-VLT-020)
 
@@ -560,6 +1399,7 @@ _M3 groundwork, **proposed** — taken from the camera-team review and recast as
 | CameraCalibration | state message every 500 ms: camera/session/profile/setup/calibration IDs, K (9), distortion (k1, k2, p1, p2, k3), rotation (9), translation (3, mm), fit residual, marker count. Control uses frames only after the matching calibration is validated; unknown-calibration frames are dropped. | `VLT/camera-calibration.schema.json` |
 | Identities | `setup_revision` = hash of the fixed installation/profile/marker-map manifest; `calibration_id` per camera result, so a camera restart doesn't change every peer's setup identity | — |
 | Sequence numbers | uint32 per session; n is newer than last iff 0 < (n − last) mod 2³² < 2³¹; equal = duplicate; half range = rejected | — |
+| Target and GalvoStatus (architecture, rev 24) | Same transport rules as Observation (UDP, JSON, ≤ 1400 bytes, schema version 1). Target adds `session_id`, `setup_revision`, `schema_version`, `t_created_ns` and `purpose` (TRACK / SCAN / CHECK / IDLE) to §10; a Target is sent every fusion slot in every mode. GalvoStatus adds `session_id`, `setup_revision`, `schema_version` and the sync state. Observation adds the stage timestamps `t_readout_ns`, `t_detected_ns`, `t_sent_ns` for F-VLT-39. Finding A-4: the schema files are updated when Gate 2 accepts this. | `VLT/camera-observation.schema.json` (to update) |
 
 Owner (role): Sensor and actuator modules delivers settings, driver binding, calibration and schema-valid observations; System design checks time/validity integration; Integration support supplies measured marker corners and replay.
 
@@ -573,16 +1413,16 @@ Budget phases per [L] p. 36–40, 292–299: **input** (sensing and on-node proc
 | T2 target-loss shutdown | Sensor and actuator modules | hard, 100 ms + 10 ms from the last fresh valid target | 100 ms (local target timeout, F-VLT-10) | — (local) | — (local) | 1 ms (timeout detection) | 8 ms (laser supply off) | 1 ms |
 | T3 fast unsafe-condition shutdown, frame-evidenced (< 2 cameras, sync loss, spot outside the cube, spot while off) | System design | hard, 100 ms from the first exposure showing the condition | 10 ms (exposure → readout 6, detection 4) | 2 ms (camera → control 1, control → galvo 1) | 11 ms (wait for fusion slot) | 1 ms (condition check, safe decision) | 10 ms (laser supply off) | 66 ms |
 | T3, locally detected (output stream stopped, galvo restart) | Sensor and actuator modules | hard, 100 ms from the local event | — (local event) | — | — | 1 ms (detection) | 10 ms (laser supply off) | 89 ms |
-| T6 effect supervision (F-VLT-26/42) | System design | hard, 500 ms + 100 ms | open | open | open | open | open | open |
-| T7 galvo hang (watchdog) | Sensor and actuator modules | hard, 1 s total | — | — | — | open | open | open |
-| kill switch | Sensor and actuator modules | 100 ms (F-VLT-30); laser cut by hardware at once, software follows | open | — | — | open | open | open |
+| T6 effect supervision (F-VLT-26/42) | System design | hard, 500 ms + 100 ms from the origin of F-VLT-26 (first exposure > 50 mm) or F-VLT-42 (first laser-on placement or last accepted measurement) | 10 ms (exposure → readout 6, detection 4; F-VLT-26 only) | 1 ms (camera → control) | 11 ms (wait for fusion slot) | 500 ms persistence (local monotonic) + 1 ms (decision) | 1 ms (control → galvo) + 1 ms (LaserPolicy → LaserGuard) + 8 ms (laser supply off) | 67 ms (F-VLT-26) / 78 ms (F-VLT-42: no camera stages, 11 ms slot wait) |
+| T7 galvo hang | Sensor and actuator modules | hard, 1 s total | — | — | — | output loop stalls: LaserGuard sees the heartbeat older than 20 ms (≤ 21 ms); LaserGuard or kernel stalls too: on-chip watchdog, no feed for 1 s (feed every 0.5 ms, so ≤ 1 s after the hang) | 1 ms (enable low) + 8 ms (laser supply off); watchdog path: SoC reset, enable pin to its pulled-down default (< 1 ms) | ≈ 970 ms (fast path) / ≈ 0 ms (watchdog backstop, finding A-2) |
+| kill switch | Sensor and actuator modules | 100 ms to safe state and display (F-VLT-30); laser cut by hardware at once, software follows | 1 ms (sense poll) + 2 ms (debounce) | 1 ms (GalvoStatus at once) | 10 ms (wait for fusion slot) | 1 ms (ModeMachine → SAFE) | 50 ms (status push to the laptop, ≤ 20 Hz) + 1 ms (display) | 34 ms |
 | T5 camera reintegration | Sensor and actuator modules | none (NF-VLT-26) | restart, clock synchronization (F-VLT-20) | CameraCalibration every 500 ms (11.1) | control validates the calibration before using frames | automatic calibration ≤ 10 s (F-VLT-12) | — | — |
-| arming check (F-VLT-31) | System design | ≤ 1 s | open (proposal: ≤ 250 ms per point, ADR-VLT-020) | open | open | open | open | open |
-| galvo calibration scan (F-VLT-13) | System design | ≤ 60 s per attempt | open | open | open | open | open | open |
+| arming check (F-VLT-31) | System design | ≤ 1 s | per point ≤ 250 ms (ADR-VLT-020): settle 5 ms, ≥ 2 frames seen by ≥ 2 cameras | 1 ms per point | 11 ms per point | 1 ms per point (spot triangulation, 5 mm check) | 3 points × ≤ 250 ms = 750 ms, laser off on failure 10 ms | 240 ms |
+| galvo calibration scan (F-VLT-13) | System design | ≤ 60 s per attempt | 75 points (25 per plane: floor and two far walls), each ≤ 250 ms with timeout | included per point | included per point | fit ≤ 2 s (Gauss–Newton, NumPy) | ≤ 75 × 250 ms = 18.75 s, laser off 10 ms | ≈ 39 s |
 
-The T1 split is the 9-stage camera budget of ADR-VLT-021 mapped onto the five phases; each stage's measured high-water mark must fit. T2, T3 and T5 are first proposals (camera-team PR, adapted): T2 fits the 10 ms after the 100 ms timeout; T3 reuses the T1 camera stages and leaves 66 ms reserve. The kill switch is not part of T3: it cuts the laser by hardware (F-VLT-30). **To do (M3):** budgets for T6, T7, kill switch, arming check, galvo scan and every other laser-off reaction of the reaction matrix (NF-VLT-34).
+The T1 split is the 9-stage camera budget of ADR-VLT-021 mapped onto the five phases; each stage's measured high-water mark must fit. T2, T3 and T5 are first proposals (camera-team PR, adapted): T2 fits the 10 ms after the 100 ms timeout; T3 reuses the T1 camera stages and leaves 66 ms reserve. The kill switch is not part of T3: it cuts the laser by hardware (F-VLT-30). Every other laser-off reaction of the reaction matrix (NF-VLT-34) uses the T3 path (frame-evidenced or local) or T2; each row of the matrix names its transaction. Reception counts a worst-case wait of one fusion period plus 1 ms grid jitter.
 
-Numeric validity limits proposed with T1 (ADR-VLT-021): fusion period 10 ms, placement 5 ms after the slot; observation age ≤ 25 ms; exposure skew ≤ 20 ms; prediction horizon ≤ 30 ms; target transport age ≤ 5 ms; oldest source to target use ≤ 30 ms; target expiry min(t_place + 1 ms, oldest source + 30 ms), exclusive; sync-status age ≤ 100 ms, reported every ≤ 50 ms; future-timestamp tolerance 2 ms; galvo interpolation period ≤ 0.5 ms.
+Numeric validity limits proposed with T1 (ADR-VLT-021): fusion period 10 ms, placement 5 ms after the slot; observation age ≤ 25 ms; exposure skew ≤ 20 ms; prediction horizon ≤ 30 ms; target transport age ≤ 5 ms; oldest source to target use ≤ 30 ms; target expiry min(t_place + 1 ms, oldest source + 30 ms), exclusive — **architecture proposal (finding A-1, Gate 2):** min(t_place + fusion period + g, oldest source + prediction horizon) with prediction horizon ≤ 45 ms, so a target stays valid until the next one is placed; sync-status age ≤ 100 ms, reported every ≤ 50 ms; future-timestamp tolerance 2 ms; galvo interpolation period ≤ 0.5 ms.
 
 ### 11.3 Global time (proposed)
 
@@ -599,15 +1439,22 @@ Numeric validity limits proposed with T1 (ADR-VLT-021): fusion period 10 ms, pla
 | T3 (clock) | as above | 50 ms clock step or suppressed PTP on a camera node → node not synced, its observations excluded within 100 ms, diagnostic logged (F-VLT-20/22) |
 | camera moved | log of the pose check | displace a calibrated camera while tracking → reprojection error > 2 px detected within 1 s, camera absent, degraded mode (F-VLT-12) |
 | T2 | photodiode against the cable pull | unplug the control node's cable → laser off ≤ 100 ms + 10 ms (F-VLT-10) |
-| T6, T7, kill switch, arming check, galvo scan | to do | to do |
+| T6 | photodiode against the origin from the log (first exposure > 50 mm, or first laser-on placement); independent of node clocks (NF-VLT-29) | block one mirror axis or load a galvo calibration with a 60 mm offset while tracking → laser off ≤ 600 ms, alarm, latched safe state (F-VLT-26); cover the ball so that the spot is unmeasurable while the laser is on → laser off ≤ 600 ms (F-VLT-42); unplug the I2S data line with an observable effect (F-VLT-15) |
+| T7 | photodiode against the SIGSTOP time | SIGSTOP of the galvo output loop with the laser on → laser off ≤ 30 ms by LaserGuard; SIGSTOP of both galvo processes → laser off ≤ 1 s by the on-chip watchdog and the node reboots into the ground state (NF-VLT-30) |
+| kill switch | photodiode (hardware cut) and display log against the press | press during tracking → laser off at once, SAFE shown ≤ 100 ms; release → laser stays off until a new arming check; unplug the sense wire → reported as pressed (F-VLT-30) |
+| arming check | log and photodiode (laser-on time ≤ 1 s) | load a calibration with an offset → arming refused, scan starts by itself (F-VLT-31); hide one check point → check fails, no arming |
+| galvo scan | log (≤ 60 s per attempt) | start without a galvo calibration → scan ≤ 60 s, residual reported; kill switch mid-scan → aborted, previous calibration kept; cover the spot for every scan → 2 failed attempts, no further scan, diagnostic (F-VLT-13) |
 
-Accuracy reference plan (ADR-VLT-022, `VLT/camera-reference-plan.json`): ten independently measured static positions (uncertainty ≤ 2 mm), three reference swings (150/225/300 mm), laser on/off and no-ball cases, second review of ≥ 10 % of the annotations. Proposed combined error budget against the 25 mm ball radius: perception ≤ 10 mm, prediction and timing ≤ 8 mm, galvo placement ≤ 5 mm (all p99), reserve 2 mm. **To do (M3):** fault injection per transaction ([L] p. 283–284).
+Accuracy reference plan (ADR-VLT-022, `VLT/camera-reference-plan.json`): ten independently measured static positions (uncertainty ≤ 2 mm), three reference swings (150/225/300 mm), laser on/off and no-ball cases, second review of ≥ 10 % of the annotations. Proposed combined error budget against the 25 mm ball radius: perception ≤ 10 mm, prediction and timing ≤ 8 mm, galvo placement ≤ 5 mm (all p99), reserve 2 mm. Fault injection per transaction ([L] p. 283–284) is the third column of the table above; each row is injected ≥ 10 times in the S8 campaign (NF-VLT-34).
 
 ### 11.5 Reference installation (proposed, ADR-VLT-016)
 
 800 mm cube; nominal rest centre (400, 400, 300) mm; matte white 50 mm ball on a 1000 mm suspension; deflection 100–300 mm; speed ≤ 1000 mm/s, acceleration ≤ 4000 mm/s²; matte grey floor and far walls; normal room lighting; cameras at (−1200, 400, 1000), (400, −1200, 1000), (700, 400, 2000) mm aimed at (400, 400, 400); 18 ArUco markers (140 mm); galvo at (−1400, −1400, 2200) mm, needing ≥ 14.17° usable half-angle (OQ-4).
 
 ### 11.6 Open checks before Gate 2
+
+- R-2 (ADR-VLT-023): Python galvo output loop — block jitter and ALSA underruns over a 10-min run (S3), and Python detection time per frame on the camera node (S2). Owner: Sensor and actuator modules.
+- Laser switch-off delay (supply switch + module decay) measured with the photodiode; it sets `laser_switch_off_delay_ms` for F-VLT-16 and the 8 ms output budget of T2/T3/T6 (finding A-3). Owner: Sensor and actuator modules.
 
 - Can a Pi 3 run 80–120 fps capture with detection and JSON output per camera within NF-VLT-19 (CPU ≤ 75 %, RAM ≤ 50 %)? Owner: Sensor and actuator modules.
 - Camera fixed: Camera Module v2.1 (IMX219, rolling shutter). Its 640 × 480 mode (≈ 103 fps) uses a cropped 1280 × 960 sensor area, so the field of view shrinks to ≈ 26.5° × 20°; the proposed layout needs ≥ 45° (ADR-VLT-016/020). The full-area 1640 × 1232 mode keeps 62.2° × 48.8° but reaches only ≈ 42 fps, below the proposed 80–120 fps. Owner: Sensor and actuator modules, with System design (camera distance, frame rate vs. T1 budget). Rolling shutter needs the row-time rectification of ADR-VLT-020.
@@ -629,7 +1476,51 @@ The camera-team proposals would change approved requirements. They are not appli
 
 ## 12. Architecture Consistency Review
 
-open — after PM review
+_Walked with `checklists/architecture-consistency.md` (general and DRS rows) over every requirement whose fulfilment spans modules, on the architecture of rev 24. Verdicts: OK = both endpoints agree; MISMATCH = endpoints disagree; DANGLING = an endpoint, value or budget contributor is missing or unverified. Findings are listed, not fixed silently; the human decides at Gate 2._
+
+### Cross-module consistency matrix
+
+| Requirement | Element | Chain (source → … → destination) | Modules | Verdict | Note |
+| --- | --- | --- | --- | --- | --- |
+| F-VLT-5, F-VLT-22, NF-VLT-18 | Data element `Target.t_valid_until_ns` | TargetBuilder → UDP → TargetGuard → OutputStream interpolation until the next target | control/target_builder, galvo/target_guard, galvo/output_stream | MISMATCH | **A-1.** The proposed expiry min(t_place + 1 ms, source + 30 ms) of ADR-VLT-021 ends each target 1 ms after placement, but the next target is placed 10 ms later (fusion period). The galvo would have no valid target for 9 ms of every 10 ms. Proposal: expiry min(t_place + fusion period + g, source + prediction horizon), horizon ≤ 45 ms (CA prediction error at 45 ms within the 8 ms budget of ADR-VLT-022 to be shown in S1). Changes a proposed ADR value, not a requirement. |
+| NF-VLT-26, NF-VLT-30 | Timing budget T7 | output-loop stall → LaserGuard heartbeat → enable low; LaserGuard/kernel stall → watchdog → SoC reset | galvo/output_stream, galvo/laser_guard, galvo/hw_watchdog | OK | **A-2.** The fast path meets T7 with ≈ 970 ms reserve; the watchdog backstop has no guaranteed reserve (1 s timeout = 1 s deadline; it holds only because the last feed precedes the hang). The SoC does not allow a timeout below 1 s. |
+| F-VLT-16 | Configuration `laser_switch_off_delay_ms` | measured on the bench → Config → EffectSupervisor action-delay window | common/config, control/effect_supervisor | DANGLING | **A-3.** No value or key exists yet; the switch-off delay also sets the 8 ms output budget of T2/T3/T6. Proposal: key with default 10 ms, replaced by the S3 measurement (§11.6). |
+| F-VLT-39, F-VLT-25, F-VLT-23 | Interfaces Observation, Target, GalvoStatus | camera/galvo/control encoders → schema v1 → decoders | common/messages, all node mains | MISMATCH | **A-4.** The design needs fields that §10 and `camera-observation.schema.json` don't have: Observation stage timestamps (F-VLT-39), Target `session_id`/`setup_revision`/`schema_version`/`t_created_ns`/`purpose` (F-VLT-23/24, scan and check without arming), GalvoStatus envelope fields and sync state. Proposal: add them to schema version 1 before S1 (no message has shipped yet). |
+| NF-VLT-18, NF-VLT-1, NF-VLT-32 | Timing budget T1, input phase | exposure → readout → detection (10 ms) | camera/frame_source, camera/detector | DANGLING | **A-5 (R-1).** The camera mode that gives both ≥ 45° field of view and 80–120 fps is not confirmed; the input budget is unverified until the S2 bench check. |
+| NF-VLT-18, NF-VLT-19, F-VLT-15 | Timing budget T1 output phase; detection stage | Python output loop → ALSA → DAC; Python detection per frame | galvo/output_stream, camera/detector, common/rt_loop | DANGLING | **A-6 (R-2).** Python timing (ADR-VLT-023) unverified until the S2/S3 bench checks; levers in *Scaling strategy*. |
+| F-VLT-3, F-VLT-22, NF-VLT-24 | Global time / temporal accuracy | ptp4l → ClockStatus → camera timestamp mapping → ValidityGate age/skew → Triangulator motion compensation | common/clock_status, camera/frame_source, control/validity_gate, control/triangulator | OK | π ≤ 1 ms, g = 2 ms > π; mapping error ≤ 0.5 ms; observations aligned to t_fuse with the filter velocity; age ≤ 25 ms + lead 5 ms ≤ 30 ms. |
+| F-VLT-10, F-VLT-22 | Control signal: target timeout | TargetGuard local monotonic timer ← only valid targets | galvo/target_guard, galvo/laser_policy | OK | `CLOCK_MONOTONIC_RAW`, not corrected by PTP; invalid messages don't refresh it; Target sent every slot in every mode, so 100 ms means "control silent". |
+| F-VLT-21, F-VLT-25, F-VLT-35 | Mechanism: arming epoch | ModeMachine epoch → Target.arm_epoch → LaserPolicy blocked epoch per control session | control/mode_machine, control/target_builder, galvo/laser_policy | OK | Galvo blocks the current epoch on every local fault and the first epoch of a new control session; a lost GalvoStatus can't re-enable the laser. |
+| F-VLT-41, F-VLT-8 | State machine | ModeMachine → Decision.laser_allowed/purpose → TargetBuilder → LaserPolicy | control/mode_machine, control/target_builder, galvo/laser_policy | OK | Laser only in ARMING_CHECK, CALIBRATING_GALVO, TRACKING; galvo never decides a mode; no unreachable state; SAFE is left only via READY. |
+| F-VLT-11, F-VLT-27 | Fault hypothesis (k = 1 of 3 cameras) | camera omission/value failure → ValidityGate status / Triangulator reprojection vote → ModeMachine degraded | control/validity_gate, control/triangulator, control/mode_machine | OK | Receiver expects omission and detectable value failures, which is what NF-VLT-23 assumes. |
+| F-VLT-30, NF-VLT-3, NF-VLT-25 | Hardware peripheral: laser enable and kill sense | LaserGuard (sole owner of both GPIOs) ← request + heartbeat from the output loop | galvo/laser_guard, galvo/galvo_node | OK | Exclusive GPIO ownership; pull-down on enable, pull-up on sense (open = pressed); hardware cut independent of software. |
+| F-VLT-15 | End-to-end: output stream stop | ALSA underrun → OutputStream → LaserPolicy → LaserGuard; silence = 0 V = centre | galvo/output_stream, galvo/laser_policy, galvo/laser_guard | OK | Stricter than NF-VLT-23 assumes: a loop stall < 1 s turns the laser off within ≈ 30 ms via the heartbeat; the "hang shorter than 1 s" residual shrinks to a LaserGuard-and-loop stall. |
+| F-VLT-42, F-VLT-26 | Timing budget T6 | first exposure / first laser-on placement → EffectSupervisor monotonic deadline → ModeMachine → Target laser off → galvo | control/effect_supervisor, control/mode_machine, galvo/* | OK | ≤ 533 ms (F-VLT-26) and ≤ 522 ms (F-VLT-42) worst case against 600 ms; expiry sticky until laser off. |
+| F-VLT-7 | Data element: hit observations | ValidityGate usable (≤ 25 ms) → EffectSupervisor hit rule (≤ one frame period) | control/validity_gate, control/effect_supervisor, control/run_scorer | OK | EffectSupervisor applies the stricter one-frame-period rule itself. |
+| F-VLT-13, F-VLT-31 | Mechanism: scan and check | ModeMachine → GalvoCalibration → TargetBuilder.static (purpose SCAN/CHECK) → galvo; spot 3D → GalvoCalibration | control/mode_machine, control/galvo_calibration, control/target_builder, control/effect_supervisor | OK | Exactly one producer of scan points; attempts counted in ModeMachine; F-VLT-42 refresh = spot located by ≥ 2 cameras. |
+| F-VLT-24 | Configuration and setup identity | Config + marker map + profile → SetupIdentity.revision → every message → ValidityGate / TargetGuard / ModeMachine | common/config, common/setup_identity, control/validity_gate, galvo/target_guard | OK | Single source of truth; per-node keys excluded from the hash; calibrations bound by `calibration_id`. |
+| F-VLT-17, F-VLT-28 | Ground state / reintegration | node start → new session → SequenceTracker NEW_SESSION → CameraCalibration validated before frames count | camera/camera_node, common/sequence, control/validity_gate | OK | All nodes share the ground state (laser off, centre, unarmed, no history); reintegration only through validation. |
+| NF-VLT-27, F-VLT-23 | Message semantics and flow control | sender → UDP → StateLink.drain keeps newest per sender | common/udp_link | OK | State messages on both sides; implicit flow control; bounded socket buffer drops a burst. |
+| NF-VLT-6, NF-VLT-7, NF-VLT-8 | Shared resource: monitoring queues | loop → bounded queue → sender process → UDP → MonitorServer | common/monitor_link, common/event_log, monitor/monitor_server | OK | `put_nowait` only; no path from laptop to nodes; rate limits keep ≤ 20 Mbit/s. |
+| NF-VLT-27 | Capacity budget | load model peak → per-link demand | all senders | OK | ≤ 10 Mbit/s on the busiest port (≤ 50 % of 100 Mbit/s). |
+| F-VLT-29, F-VLT-32 | Memory and storage | EventLog / SessionRecorder writer processes → local files | common/event_log, control/session_recorder | OK | Bounded per session; never blocks the loop; drops counted. |
+| NF-VLT-10 | Security / trust boundary | network → loop processes | all node mains | OK | No loop process opens a command port; administration only by key-only SSH (ADR-VLT-014); trusted isolated network (NF-VLT-28). |
+| NF-VLT-33 | Concurrency / timing of actions | RtLoop per process, one core, GC in slack; helpers in separate processes | common/rt_loop, all nodes | OK | No threads share state inside a loop process; galvo shared memory has a single writer per field. |
+
+**Count:** 2 MISMATCH (A-1, A-4), 3 DANGLING (A-3, A-5, A-6), all other rows OK. A-2 is an OK row with a note.
+
+### Findings & human-review decisions
+
+| Finding | Decision | By | Date | Rationale |
+| --- | --- | --- | --- | --- |
+| A-1 target expiry vs. fusion period | pending — Gate 2 | | | proposal in §11.2 and TargetBuilder |
+| A-2 T7 watchdog backstop without reserve | pending — Gate 2 | | | fast path via LaserGuard meets T7 with margin |
+| A-3 laser switch-off delay value missing | pending — Gate 2 | | | measure in S3 |
+| A-4 schema fields missing (Observation, Target, GalvoStatus) | pending — Gate 2 | | | add to schema v1 before S1 |
+| A-5 camera mode vs. field of view (R-1) | pending — Gate 2 | | | bench check S2 |
+| A-6 Python timing (R-2) | pending — Gate 2 | | | bench checks S2/S3 |
+| Requirement change requests (ADR-VLT-017/020/021/022) | pending — team decision | | | not part of Gate 1; the architecture works with or without them |
+| OQ-3, OQ-4, OQ-7, OQ-12, OQ-14 | pending — Gate 2 | | | the architecture uses their proposals (cube 800 mm, bench galvo facts, white ball/grey background, §11.2 limits, error budget) |
 
 ## Notes (human)
 

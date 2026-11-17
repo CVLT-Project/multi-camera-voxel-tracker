@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 27
+revision: 31
 created: 2026-11-02T15:27
-updated: 2026-11-12T20:15
+updated: 2026-11-17T14:10
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 22 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 25 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -86,12 +86,18 @@ register: —
 | 2026-11-12 | VLT | concept | start-up and envelope | rev 21, on user instruction: F-VLT-28 allows the start-up galvo scan (conflict with F-VLT-13 resolved); operating envelope from the OQ-14 proposal fixed in NF-VLT-1 (release 100 … 300 mm, ≤ 1000 mm/s, ≤ 4000 mm/s²); risk R-1 (camera mode vs. 30 ms) recorded in §8. |
 | 2026-11-12 | VLT | concept | review follow-up | NF-VLT-1 lowest release ≈ 120 mm (F-VLT-7 threshold), room lighting defined and recorded; F-VLT-28 failure path and second-scan case; ADR-VLT-016 no longer claims the operating envelope (now NF-VLT-1). |
 | 2026-11-12 20:15 | VLT | concept | Gate 1 approved | PM review (MANIFEST Phase 4) passed on concept rev 22: requirements approved by the sponsor with the team; open questions OQ-3/4/7/12/14 and risk R-1 carried into the architecture; §11 change requests not approved with it. Architecture (second half of the concept) may start. |
+| 2026-11-17 10:00 | VLT | concept | next | architecture started (concept rev 23): "Proposed" markers removed from the approved requirements, CONTEXT rev 18 terms active |
+| 2026-11-17 10:15 | VLT | concept | sponsor decision | programming language: Python 3 on every node (ADR-VLT-023); new risk R-2 (Python timing on the galvo output stream and camera detection) |
+| 2026-11-17 12:00 | VLT | concept | architecture written | concept rev 24: §11 module tree, slices S1–S8, module specs, flow, interfaces, state machine, testability, scaling, traceability (76/76 requirements); T6/T7/kill switch/arming check/scan budgets and tests; §12 consistency review: 2 MISMATCH (A-1, A-4), 3 DANGLING (A-3, A-5 = R-1, A-6 = R-2); handed back for Gate 2 |
+| 2026-11-17 14:00 | VLT | concept | user request | concept rev 25: simulators named by boundary — node simulators (`*NodeSim`) in `sim/` with shared `Scenario`; hardware simulators with the node that uses them (`camera/sim_camera.py`, `galvo/sim_galvo_hw.py`, `common/sim_clock.py`); CONTEXT rev 20; no requirement or §12 verdict changed |
+| 2026-11-17 14:10 | VLT | concept | wip_commit | user request: commit concept rev 25 (architecture + consistency review, Gate 2 pending) as work in progress for team review — exception to RULES §6 as before Gate 1 |
 
 ## Open items for the Director
 
-- Gate 1 approved 2026-11-12 (concept rev 22). Next: the concept author flips the "proposed — PM review pending / Gate 1 pending" markers in the concept and `CONTEXT.md` to approved, then continues with the architecture (§11, M3) and the consistency review (§12, Gate 2).
+- Architecture and consistency review written (concept rev 24, simulators reorganised in rev 25). **Gate 2 (consistency review) pending:** findings A-1 … A-6, the §11 change requests, OQ-3/4/7/12/14; bench checks R-1/R-2 and the laser switch-off delay feed A-3/A-5/A-6.
 - Before or with Gate 2: team decisions on the §11 requirement change requests (ADR-VLT-017/020/021/022); answers to OQ-3/4/7/12/14; bench check of R-1 (camera mode vs. NF-VLT-18 30 ms).
-- Design question still to settle in the architecture: programming language of the nodes (Python / C++ / mixed).
+- Programming language decided 2026-11-17: Python everywhere (ADR-VLT-023). Bench check R-2 (galvo output blocks, camera detection time in Python) before Gate 2, together with R-1.
+- Concept stage is far beyond its 120-min budget (running since 2026-11-02) — note for the retro.
 
 ## Notes (human)
 
