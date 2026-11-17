@@ -2,10 +2,10 @@
 stage: shared
 owner: build-concept
 status: in_progress
-revision: 20
+revision: 21
 created: 2026-11-02T15:28
-updated: 2026-11-17T14:00
-input: VLT/10-intake.md@2, VLT/20-concept.md@25
+updated: 2026-11-17T17:00
+input: VLT/10-intake.md@2, VLT/20-concept.md@26
 ---
 
 # CONTEXT — Ubiquitous Language
@@ -43,7 +43,7 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | grandmaster | the node whose clock all others follow by PTP; proposed: the control node (NF-VLT-24) | `grandmaster` | VLT | active |
 | ground state | the defined state a node starts in: laser off, converter at centre, unarmed, no history (F-VLT-28) | `GROUND` | VLT | active |
 | state message | a message whose newest valid copy replaces the previous one; never queued or retransmitted (NF-VLT-27) | — | VLT | active |
-| transaction | an end-to-end real-time chain with its deadline class: T1 tracking (firm), T2 target-loss shutdown (hard), T3 unsafe-condition shutdown (hard), T4 monitoring (soft), T5 camera reintegration (no deadline), T6 effect supervision (hard, 500 ms + 100 ms), T7 galvo software hang (hard, 1 s) (NF-VLT-26, ADR-VLT-008/018) | `T1` … `T7` | VLT | active |
+| transaction | a causal chain from a physical stimulus through input, action, transmission, reception and output to a physical effect, with an end-to-end deadline from the stimulus ([L] p. 36–40, 292–299): T1 tracking (firm, 45 ms), T3 unsafe-condition shutdown (hard, 100 ms), T6 effect supervision (hard, 600 ms), T8 kill switch (firm, 100 ms). Since 2026-11-17 T2, T4, T5 and T7 are no transactions (see fault reaction, mode activity) | `T1`, `T3`, `T6`, `T8` | VLT | active |
 | camera status | per camera: absent, unsynced, ball not seen, ball seen (F-VLT-11) | `CameraStatus` | VLT | active |
 | marker map | ArUco marker IDs on the cube frame with their measured cube coordinates; the reference for camera calibration (ADR-VLT-012) | `marker_map` | VLT | active |
 | galvo scan | the automatic galvo calibration: grid projected onto floor and walls, measured by the cameras; started by the control node when no valid calibration exists or the arming check fails (F-VLT-13, ADR-VLT-013) | `galvo_scan` | VLT | active |
@@ -72,6 +72,8 @@ _The project's shared domain dictionary. Developers and agents use these terms �
 | node simulator | a program that replaces a whole node at the network boundary and speaks the real protocol; the "camera simulator", "galvo simulator" and "control simulator" of NF-VLT-31 are node simulators | `CameraNodeSim`, `GalvoNodeSim`, `ControlNodeSim` (`sim/`) | VLT (architecture, rev 25) | proposed — Gate 2 |
 | hardware simulator | a class with the interface of one hardware driver, used inside a real node instead of the hardware; lives in the folder of that node | `Sim<Driver>`: `SimFrameSource` (`camera/`), `SimOutputStream`, `SimGpio`, `SimWatchdog` (`galvo/`), `SimClock` (`common/`) | VLT (architecture, rev 25) | proposed — Gate 2 |
 | scenario | the ground truth both camera simulators read: ball trajectory, laser state, spot, calibrations | `Scenario` (`sim/`) | VLT (architecture, rev 25) | proposed — Gate 2 |
+| fault reaction | the detection of a fault and the system's reaction, with its own origin and deadline, but no physical stimulus-to-effect chain: target loss, local galvo faults, galvo hang, no measurable spot, camera data loss (NF-VLT-26) | — | VLT (transaction review, rev 26) | active |
+| mode activity | a procedure inside an operating mode with a time limit: camera reintegration, arming check, galvo scan (NF-VLT-26) | — | VLT (transaction review, rev 26) | active |
 
 ## Naming rules
 

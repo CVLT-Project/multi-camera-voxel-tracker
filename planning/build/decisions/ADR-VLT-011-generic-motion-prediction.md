@@ -22,3 +22,7 @@ F-VLT-4 rewritten; the maximum speed and acceleration of the tested envelope are
 ## Traces to
 
 F-VLT-4, F-VLT-27, OQ-14
+
+## Amendment 2026-11-17 — transaction review (approved by the sponsor)
+
+The constant-acceleration model is mandatory: at the 45 ms horizon of T1 a constant-velocity model would use ≈ 7.8 mm of the 8 mm prediction-and-timing share (concept §11.2).

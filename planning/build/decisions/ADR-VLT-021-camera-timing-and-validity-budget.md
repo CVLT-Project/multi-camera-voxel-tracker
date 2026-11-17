@@ -52,3 +52,7 @@ Boundary tests for every limit, clock steps, old-source/fresh-packet targets, ro
 ## Traces to
 
 F-VLT-1/3/4/5/18/20/22/23/24/39/42, NF-VLT-5/18/19/24/26/27/29/33, OQ-1/12, ADR-VLT-002/008/009/018/020/022
+
+## Amendment 2026-11-17 — transaction review (approved by the sponsor)
+
+T1 now runs from the physical change of the ball's motion with p99 ≤ 45 ms (NF-VLT-18); the stage budget of this ADR is replaced by the complete chain in concept §11.2 (input 19 · camera action 4 · transmission 1 · reception 11 · control action 1 · transmission 1 · galvo reception 3 · output 1 = 41 ms). Cameras free-run at ≥ 80 fps (no phase-lock). Prediction horizon ≤ 45 ms; target expiry min(t_place + fusion period + g, oldest source + horizon) (finding A-1); sync status polled every 20 ms.

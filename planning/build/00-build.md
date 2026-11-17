@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 31
+revision: 32
 created: 2026-11-02T15:27
-updated: 2026-11-17T14:10
+updated: 2026-11-17T17:05
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 25 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 26 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -91,10 +91,12 @@ register: —
 | 2026-11-17 12:00 | VLT | concept | architecture written | concept rev 24: §11 module tree, slices S1–S8, module specs, flow, interfaces, state machine, testability, scaling, traceability (76/76 requirements); T6/T7/kill switch/arming check/scan budgets and tests; §12 consistency review: 2 MISMATCH (A-1, A-4), 3 DANGLING (A-3, A-5 = R-1, A-6 = R-2); handed back for Gate 2 |
 | 2026-11-17 14:00 | VLT | concept | user request | concept rev 25: simulators named by boundary — node simulators (`*NodeSim`) in `sim/` with shared `Scenario`; hardware simulators with the node that uses them (`camera/sim_camera.py`, `galvo/sim_galvo_hw.py`, `common/sim_clock.py`); CONTEXT rev 20; no requirement or §12 verdict changed |
 | 2026-11-17 14:10 | VLT | concept | wip_commit | user request: commit concept rev 25 (architecture + consistency review, Gate 2 pending) as work in progress for team review — exception to RULES §6 as before Gate 1 |
+| 2026-11-17 17:00 | VLT | concept | sponsor decisions | transaction review against [L] (concept rev 26, approved incl. requirement wording): T1 from the physical change, p99 ≤ 45 ms (NF-VLT-18), free-running cameras ≥ 80 fps, no phase-lock, constant-acceleration prediction mandatory; transactions only T1/T3/T6/T8, the rest fault reactions or mode activities, monitoring no transaction (NF-VLT-26/29, F-VLT-10/17/34/42, NF-VLT-23/30); §11.2 complete chains with WCET per stage; design fixes A-7/A-8; ADR-VLT-008/011/018/019/021 amended; CONTEXT rev 21 |
+| 2026-11-17 17:05 | VLT | concept | wip_commit | user request: commit concept rev 26 as work in progress |
 
 ## Open items for the Director
 
-- Architecture and consistency review written (concept rev 24, simulators reorganised in rev 25). **Gate 2 (consistency review) pending:** findings A-1 … A-6, the §11 change requests, OQ-3/4/7/12/14; bench checks R-1/R-2 and the laser switch-off delay feed A-3/A-5/A-6.
+- Architecture and consistency review written (concept rev 24, simulators reorganised in rev 25, transactions rebuilt in rev 26). **Gate 2 (consistency review) pending:** findings A-1 … A-6, the §11 change requests, OQ-3/4/7/12/14; bench checks R-1/R-2 and the laser switch-off delay feed A-3/A-5/A-6.
 - Before or with Gate 2: team decisions on the §11 requirement change requests (ADR-VLT-017/020/021/022); answers to OQ-3/4/7/12/14; bench check of R-1 (camera mode vs. NF-VLT-18 30 ms).
 - Programming language decided 2026-11-17: Python everywhere (ADR-VLT-023). Bench check R-2 (galvo output blocks, camera detection time in Python) before Gate 2, together with R-1.
 - Concept stage is far beyond its 120-min budget (running since 2026-11-02) — note for the retro.

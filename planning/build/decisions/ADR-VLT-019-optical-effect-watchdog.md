@@ -38,3 +38,7 @@ A time-based policy provides a finite bound without inventing a camera model or 
 ## Traces to
 
 F-VLT-6/8/11/13/21/22/23/24/26/29/31/35/41/42, NF-VLT-23/26/29/34, OQ-1/12/14, ADR-VLT-007/012/013/015/018
+
+## Amendment 2026-11-17 — transaction review (approved by the sponsor)
+
+The watchdog is a fault reaction (*no measurable spot*), not part of transaction T6. It is counted from the exposure time of the last accepted measurement (converted to the local monotonic clock), not from its acceptance time; worst case ≈ 522.5 ms against 600 ms. See concept §11.2.
