@@ -115,6 +115,25 @@ def message_fields(text: str, name: str):
     return [r for r in rows if "obsolete" not in r[2]]
 
 
+def message_examples(text: str, name: str):
+    """JSON examples of one message from the concept's message examples, as (note, json) pairs."""
+    sec = text.split("#### Message examples (schema version 1)", 1)[1].split("\nOwner (role):", 1)[0]
+    out = []
+    for m in re.finditer(r"\*\*`(\w+)` example\*\*([^\n]*)\n\n```json\n(.*?)\n```", sec, re.S):
+        if m.group(1) == name:
+            out.append((m.group(2).strip(), m.group(3)))
+    return out
+
+
+def example_block(text: str, name: str) -> str:
+    s = ""
+    for note, js in message_examples(text, name):
+        label = f"Example {note}:" if note else "Example:"
+        s += "\n" + md(clean(label)) + "\n"
+        s += "#block(width: 100%, fill: luma(245), inset: 6pt, radius: 2pt)[#set text(size: 7.4pt)\n```json\n" + js + "\n```\n]\n"
+    return s
+
+
 NODE_OF = {"camera": "camera nodes", "control": "control node", "galvo": "galvo node",
            "monitor": "monitoring laptop", "common": "all nodes", "sim": "test tools", "deploy": "all nodes"}
 
@@ -393,11 +412,14 @@ def build() -> str:
     a("\n= Interfaces and messages\n")
     i11 = table_rows(section(text, "### 11.1 Interfaces and messages — camera handoff (proposed, ADR-VLT-020)"))
     a("== Transport and message rules\n")
+    a(md("All messages between the nodes (camera, control, galvo, monitoring) are JSON: one UTF-8 JSON object per UDP "
+         "datagram. The only non-JSON traffic between the nodes is the PTP time synchronisation (F-VLT-23).") + "\n\n")
     a(tbl("(32mm, 1fr)", ["Item", "Rule"], [[r[0], r[1]] for r in i11]))
     env = table_rows(text.split("`Observation` and `Target` both carry:", 1)[1].split("\n\n**")[0])
     a("\n== Common fields\n")
     a(md("Every Observation, Target and GalvoStatus carries these fields; receivers reject a message whose version, "
-         "sender session order or setup does not match (F-VLT-23, F-VLT-24).") + "\n\n")
+         "sender session order or setup does not match (F-VLT-23, F-VLT-24). Of these, a MonitorMessage carries only `type` and "
+         "`schema_version`.") + "\n\n")
     a(tbl("(32mm, 18mm, 1fr)", ["Field", "Type", "Meaning"], env))
     extra = {
         "Observation": [["`profile_id`, `calibration_id`", "string", "camera profile and validated calibration the frame was measured with"],
@@ -415,11 +437,13 @@ def build() -> str:
         a(f"\n== {name}\n")
         a(md(direction) + "\n\n")
         a(tbl("(38mm, 26mm, 1fr)", ["Field", "Type", "Range / meaning"], message_fields(text, name) + extra.get(name, [])))
+        a(example_block(text, name))
     a("\n== CameraCalibration\n")
     a(md("camera node → control node, UDP state message every 500 ms: camera, session, profile, setup and calibration "
          "IDs; intrinsic matrix K (9 values), distortion (k1, k2, p1, p2, k3), rotation (9), translation (3, mm), "
          "reprojection residual (px), marker count and IDs. The control node uses a camera's frames only after the "
          "matching calibration is validated (F-VLT-12, F-VLT-24).") + "\n")
+    a(example_block(text, "CameraCalibration"))
     hw = table_rows(section(text, "## 6. Integration Points"))
     a("\n== Hardware interfaces\n")
     a(tbl("(34mm, 18mm, 1fr, 26mm)", ["Component", "Direction", "Contract", "Owner (role)"], [r[:4] for r in hw]))

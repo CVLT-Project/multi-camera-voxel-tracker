@@ -2,11 +2,11 @@
 stage: concept
 owner: build-concept
 status: in_progress
-revision: 26
+revision: 28
 version: 0.1
 created: 2026-11-02T16:10
-updated: 2026-11-17T17:00
-input: VLT/10-intake.md@2, requirements review request (chat, 2026-11-06), DRS completeness review request and sponsor answers to OQ-6 … OQ-17 (chat, 2026-11-10), sponsor decisions on operator control, operator feedback and admin access (chat, 2026-11-10), report requirements M3 and lecture slides [L] (chat, 2026-11-10), hardware selection galvo/DAC/laser (chat, 2026-11-10), effect-supervision and shutdown-origin corrections from the camera-team review (PR review, 2026-11-11), camera-team M3 groundwork (proposed, Gate 2), camera hardware on hand: Camera Module v2.1 on Pi 3 Model B+ (board photos, 2026-11-12), transaction review with the sponsor against the lecture [L] (chat, 2026-11-17)
+updated: 2026-11-17T18:30
+input: VLT/10-intake.md@2, requirements review request (chat, 2026-11-06), DRS completeness review request and sponsor answers to OQ-6 … OQ-17 (chat, 2026-11-10), sponsor decisions on operator control, operator feedback and admin access (chat, 2026-11-10), report requirements M3 and lecture slides [L] (chat, 2026-11-10), hardware selection galvo/DAC/laser (chat, 2026-11-10), effect-supervision and shutdown-origin corrections from the camera-team review (PR review, 2026-11-11), camera-team M3 groundwork (proposed, Gate 2), camera hardware on hand: Camera Module v2.1 on Pi 3 Model B+ (board photos, 2026-11-12), transaction review with the sponsor against the lecture [L] (chat, 2026-11-17), monitoring image encoding and message examples (chat, 2026-11-17)
 feature: VLT
 ---
 
@@ -104,6 +104,14 @@ On user request: simulators named by the boundary they replace. Node simulators 
 ### Transaction review — 2026-11-17 (rev 26)
 
 The transactions were reviewed with the sponsor against the lecture's definition ([L] p. 36–40, 48–49, 52–53, 76–78, 292–299); all changes approved, including the requirement wording. T1 is measured from the physical change of the ball's motion, p99 ≤ 45 ms (NF-VLT-18; derived from the prediction error), with free-running cameras ≥ 80 fps and mandatory constant-acceleration prediction. Transactions are now only T1, T3 (physical conditions), T6 (F-VLT-26) and T8 (kill switch, firm); target loss, local galvo faults, galvo hang, no measurable spot and camera data loss are fault reactions, camera reintegration, arming check and galvo scan are mode activities, monitoring is no transaction (NF-VLT-26, NF-VLT-29; F-VLT-10/17/34/42, NF-VLT-23/30 wording). §11.2 shows each transaction as a complete chain with WCET per stage. Design fixes: laser-off Targets act on reception; F-VLT-26/42 decided at the first fusion step after expiry, F-VLT-42 counted from the exposure of the last good measurement; kill switch reacts on the first pressed edge; ptp4l polled every 20 ms; events pushed at once, diagnostics summary every 1 s (A-7), overlay matched by exposure time (A-8). Camera phase-locking was considered and not adopted.
+
+### Monitoring image encoding — 2026-11-17 (rev 27)
+
+On user request: the JPEG in a MonitorMessage `image` payload is carried base64-encoded in the JSON field `jpeg_b64` (§10, MessageCodec, MonitorLink); the network budget counts the encoded size (≤ 40 kB per image, ≈ 4.8 Mbit/s). All messages between nodes stay JSON; PTP (kernel, IEEE 1588) is the only non-JSON traffic between nodes. No requirement and no §12 verdict changed.
+
+### Message examples — 2026-11-17 (rev 28)
+
+On user request: §11.1 states that every message between the nodes is JSON (new rows "Encoding of all node messages" and "MonitorMessage") and gives one valid JSON example per message (Observation, CameraCalibration, Target, GalvoStatus, MonitorMessage status and image). The examples include the fields of finding A-4 and a `type` field in every message. `setup_revision` aligned to the schema: full SHA-256, 64 hex digits (SetupManifest said 16). No requirement and no §12 verdict changed.
 
 ## 1. Purpose
 
@@ -466,6 +474,7 @@ All distances in mm (cube coordinates), times in ns of the shared PTP clock (`in
 
 | Field | Type | Range / meaning |
 | --- | --- | --- |
+| `type` | `string` | message name (`Observation`, `CameraCalibration`, `Target`, `GalvoStatus`, `MonitorMessage`); selects the decoder; also carried by MonitorMessage (rev 28) |
 | `schema_version` | `uint16` | supported contract version; incompatible versions rejected |
 | `session_id` | `string` | identifies one sender-process incarnation; changes on restart; sequence order is scoped to sender + session |
 | `setup_revision` | `string` | identifies the validated installation configuration and calibration set; must match the receiver's expected setup |
@@ -518,7 +527,7 @@ Session adoption and counter-wrap comparison are specified once for all receiver
 | `node` | `string` | `camera0..2`, `control`, `galvo` |
 | `t_ns` | `int64` | shared clock |
 | `kind` | `enum` | `status`, `image`, `run_result`, `alarm` |
-| `payload` | per kind | `status`: mode, aiming error, hit rate, clock offset, CPU, RAM; `image`: JPEG ≤ 320 × 240 with overlay data; `run_result`: start, end, duration, hit time, gap time, hit rate, outcome (ADR-VLT-006); `alarm`: text |
+| `payload` | per kind | `status`: mode, aiming error, hit rate, clock offset, CPU, RAM; `image`: JPEG ≤ 320 × 240, base64-encoded (RFC 4648, standard alphabet, padded) in the string field `jpeg_b64`, plus `t_exposure_ns` and overlay data; `run_result`: start, end, duration, hit time, gap time, hit rate, outcome (ADR-VLT-006); `alarm`: text |
 
 **Configuration keys** (one file per installation, read at start)
 
@@ -652,7 +661,7 @@ Pseudocode is Python with type hints. `Ns = int` (shared-clock nanoseconds, int6
 
 #### common/messages.py — MessageCodec
 
-- **Responsibility:** the binding wire format of every loop message: UTF-8 JSON, one message per UDP datagram, ≤ 1400 bytes (Observation, CameraCalibration, Target, GalvoStatus) or ≤ 60 000 bytes (MonitorMessage), int64 values as decimal strings, `schema_version` 1. Decoding checks type, version, required fields, ranges and finiteness; it never raises.
+- **Responsibility:** the binding wire format of every loop message: UTF-8 JSON, one message per UDP datagram, ≤ 1400 bytes (Observation, CameraCalibration, Target, GalvoStatus) or ≤ 60 000 bytes (MonitorMessage), int64 values as decimal strings, binary data (MonitorMessage images) as base64 strings, `schema_version` 1. Decoding checks type, version, required fields, ranges and finiteness; it never raises.
 - **Traces to:** F-VLT-23, F-VLT-24, F-VLT-25, NF-VLT-27
 
 ```python
@@ -721,7 +730,7 @@ class Config:
 
 #### common/setup_identity.py — SetupIdentity
 
-- **Responsibility:** compute `setup_revision` = SHA-256 (first 16 hex digits) of the canonical manifest: configuration (without per-node keys), marker map, camera profile; load and check calibration files (schema version, `setup_revision`, units/convention, `camera_id`, image mode, finite values) and give each a `calibration_id` = hash of its content.
+- **Responsibility:** compute `setup_revision` = SHA-256 (64 hex digits, as in the schema) of the canonical manifest: configuration (without per-node keys), marker map, camera profile; load and check calibration files (schema version, `setup_revision`, units/convention, `camera_id`, image mode, finite values) and give each a `calibration_id` = hash of its content.
 - **Traces to:** F-VLT-24
 
 ```python
@@ -791,7 +800,7 @@ class EventLog:
 
 #### common/monitor_link.py — MonitorLink
 
-- **Responsibility:** push monitoring data to the laptop: the loop calls `push()` (bounded queue, `put_nowait`, drop on full); a sender process encodes and sends UDP datagrams to `monitor_host`. Mode and safety events (mode change, safe state, latch, alarm, kill switch) are sent at once; every 1 s the node also sends a bounded diagnostics summary (active latch and cause, reason not armed, the last 20 diagnostics and alarms with counts since node start), so a laptop that connects late shows them within 2 s (F-VLT-40). Periodic data is rate-limited (status ≤ 20 Hz per node, images ≤ `monitor_image_rate_hz` at ≤ 320 × 240 JPEG), so the total stays ≤ 20 Mbit/s. Without `monitor_host` the sender is not started. No message is received from the laptop.
+- **Responsibility:** push monitoring data to the laptop: the loop calls `push()` (bounded queue, `put_nowait`, drop on full); a sender process encodes and sends UDP datagrams to `monitor_host`. Mode and safety events (mode change, safe state, latch, alarm, kill switch) are sent at once; every 1 s the node also sends a bounded diagnostics summary (active latch and cause, reason not armed, the last 20 diagnostics and alarms with counts since node start), so a laptop that connects late shows them within 2 s (F-VLT-40). Periodic data is rate-limited (status ≤ 20 Hz per node, images ≤ `monitor_image_rate_hz` at ≤ 320 × 240 JPEG ≤ 30 kB, base64-encoded ≤ 40 kB, so the message stays ≤ 60 000 bytes; a larger image is re-encoded at lower quality or dropped and counted), so the total stays ≤ 20 Mbit/s. Without `monitor_host` the sender is not started. No message is received from the laptop.
 - **Traces to:** NF-VLT-6, NF-VLT-7, NF-VLT-8, NF-VLT-10, NF-VLT-11, F-VLT-30, F-VLT-40
 
 ```python
@@ -1307,7 +1316,7 @@ Laser allowed only in ARMING_CHECK (purpose CHECK), CALIBRATING_GALVO (purpose S
 
 ### Scaling strategy
 
-- **Capacity budget:** one installation (§5). Network per peak (proposal): camera → control 3 × 120 /s × ≤ 1400 B ≈ 4 Mbit/s; CameraCalibration 3 × 2 /s × ≤ 1400 B, negligible; control → galvo 100 /s × ≤ 600 B ≈ 0.5 Mbit/s; GalvoStatus ≤ 100 /s × ≤ 400 B ≈ 0.3 Mbit/s; PTP < 0.1 Mbit/s; monitoring ≤ 20 Mbit/s total (images 3 × 5 /s × ≤ 30 kB ≈ 3.6 Mbit/s plus status). Busiest link: the control node's port, ≤ 10 Mbit/s of 100 Mbit/s (≤ 50 %, NF-VLT-27). CPU: one core per loop process; camera node = capture + detection loop (core 3), pose check (core 2, 1/s), monitoring and logging (cores 0–1).
+- **Capacity budget:** one installation (§5). Network per peak (proposal): camera → control 3 × 120 /s × ≤ 1400 B ≈ 4 Mbit/s; CameraCalibration 3 × 2 /s × ≤ 1400 B, negligible; control → galvo 100 /s × ≤ 600 B ≈ 0.5 Mbit/s; GalvoStatus ≤ 100 /s × ≤ 400 B ≈ 0.3 Mbit/s; PTP < 0.1 Mbit/s; monitoring ≤ 20 Mbit/s total (images 3 × 5 /s × ≤ 40 kB base64 ≈ 4.8 Mbit/s plus status). Busiest link: the control node's port, ≤ 10 Mbit/s of 100 Mbit/s (≤ 50 %, NF-VLT-27). CPU: one core per loop process; camera node = capture + detection loop (core 3), pose check (core 2, 1/s), monitoring and logging (cores 0–1).
 - **First bottleneck:** camera-node CPU — detection in Python at 80–120 fps on a Pi 3 (R-1, R-2, NF-VLT-19). **Lever:** lower detection resolution / region of interest around the predicted ball, then lower frame rate within the T1 budget, then a compiled detection kernel (change request). **Trigger:** detection high-water mark > 4 ms or CPU > 75 % in the S2 bench run.
 - **Second bottleneck:** galvo output block jitter (R-2). **Lever:** larger ALSA buffer (output budget 2 ms → up to 3 ms from the reserve), isolated core (`isolcpus`). **Trigger:** any underrun in a 10-min S3 run.
 
@@ -1399,12 +1408,152 @@ No orphan modules: every module above appears in at least one row; `sim/control_
 | Item | Proposal | Machine-readable |
 | --- | --- | --- |
 | Acquisition profile VLT-CAM-1 | 640 × 480 px output, 80–120 observations/s (frame period ≤ 13 ms); one Observation per captured frame, including "not seen"; only the newest complete frame is processed (no growing queue). Startup auto exposure/gain/white balance ≤ 5 s, then locked until restart; exposure 250–2000 µs, analogue gain 1–8. Rolling shutter only with measured row timing and rectification to frame-mid exposure; timestamp mapping error ≤ 0.5 ms. | `VLT/camera-profile.json` |
+| Encoding of all node messages | Every message between the nodes — Observation, CameraCalibration, Target, GalvoStatus and MonitorMessage — is one UTF-8 JSON object in one UDP datagram, with `type` and `schema_version`; int64 as decimal strings; binary data (images) as base64 strings. The only other traffic between the nodes is PTP (IEEE 1588, kernel). | — |
 | Transport camera → control | UDP unicast, UTF-8 JSON, ≤ 1400 bytes per datagram, schema version 1; int64 clock values as decimal strings; never retransmitted or queued behind old frames | `VLT/camera-observation.schema.json` |
 | Observation | camera ID, sender session, frame sequence, setup revision, profile ID, calibration ID; common frame-mid `t_exposure_ns`; raw `t_ball_sample_ns` / `t_spot_sample_ns` (null if not seen); exposure/gain; rectified ball centre/radius and spot or null; clock offset and sync state. Refines the Observation of §10. | same |
 | CameraCalibration | state message every 500 ms: camera/session/profile/setup/calibration IDs, K (9), distortion (k1, k2, p1, p2, k3), rotation (9), translation (3, mm), fit residual, marker count. Control uses frames only after the matching calibration is validated; unknown-calibration frames are dropped. | `VLT/camera-calibration.schema.json` |
 | Identities | `setup_revision` = hash of the fixed installation/profile/marker-map manifest; `calibration_id` per camera result, so a camera restart doesn't change every peer's setup identity | — |
 | Sequence numbers | uint32 per session; n is newer than last iff 0 < (n − last) mod 2³² < 2³¹; equal = duplicate; half range = rejected | — |
+| MonitorMessage (architecture, rev 27) | UDP to the monitoring laptop, JSON, ≤ 60 000 bytes, schema version 1, best effort, never acknowledged | — |
 | Target and GalvoStatus (architecture, rev 24) | Same transport rules as Observation (UDP, JSON, ≤ 1400 bytes, schema version 1). Target adds `session_id`, `setup_revision`, `schema_version`, `t_created_ns` and `purpose` (TRACK / SCAN / CHECK / IDLE) to §10; a Target is sent every fusion slot in every mode. GalvoStatus adds `session_id`, `setup_revision`, `schema_version` and the sync state. Observation adds the stage timestamps `t_readout_ns`, `t_detected_ns`, `t_sent_ns` for F-VLT-39. Finding A-4: the schema files are updated when Gate 2 accepts this. | `VLT/camera-observation.schema.json` (to update) |
+
+#### Message examples (schema version 1)
+
+One valid example per message, as sent on the wire (UTF-8 JSON, one message per UDP datagram). All examples belong to the same moment: camera 1 sees ball and spot at `t_exposure_ns`; the control node builds a Target from it, the galvo node applies it. Hashes and session IDs are example values.
+
+**`Observation` example**
+
+```json
+{
+  "type": "Observation",
+  "schema_version": 1,
+  "profile_id": "VLT-CAM-1",
+  "camera_id": 1,
+  "session_id": "3f9c2a7e5b1d4c6f8a0e2d4b6c8f1a3e",
+  "frame_seq": 48213,
+  "setup_revision": "8fb6d5f37e8055ce720bd0b1d56587f88c0071f285966ba17e72b2b12672aa73",
+  "calibration_id": "9c738956aad29c37be54c4346790d4f9ea44e8654c697b687dad4977aacb7f43",
+  "t_exposure_ns": "1795432800123456789",
+  "t_ball_sample_ns": "1795432800123318040",
+  "t_spot_sample_ns": "1795432800123288039",
+  "exposure_us": 800,
+  "analogue_gain": 2.0,
+  "ball": {"u": 312.4, "v": 228.9, "radius_px": 21.7},
+  "spot": {"u": 314.1, "v": 226.5},
+  "clock_offset_ns": "-41250",
+  "synced": true,
+  "t_readout_ns": "1795432800126856789",
+  "t_detected_ns": "1795432800130606789",
+  "t_sent_ns": "1795432800130766789"
+}
+```
+
+**`CameraCalibration` example**
+
+```json
+{
+  "type": "CameraCalibration",
+  "schema_version": 1,
+  "profile_id": "VLT-CAM-1",
+  "camera_id": 1,
+  "session_id": "3f9c2a7e5b1d4c6f8a0e2d4b6c8f1a3e",
+  "setup_revision": "8fb6d5f37e8055ce720bd0b1d56587f88c0071f285966ba17e72b2b12672aa73",
+  "calibration_id": "9c738956aad29c37be54c4346790d4f9ea44e8654c697b687dad4977aacb7f43",
+  "K": [1362.5, 0.0, 321.8, 0.0, 1361.9, 238.4, 0.0, 0.0, 1.0],
+  "distortion": [-0.081, 0.142, 0.0004, -0.0002, -0.051],
+  "R": [0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0],
+  "t_mm": [-305.0, 352.0, 1180.0],
+  "reprojection_error_px": 0.21,
+  "marker_count": 12,
+  "marker_ids": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+}
+```
+
+**`Target` example**
+
+```json
+{
+  "type": "Target",
+  "schema_version": 1,
+  "session_id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+  "setup_revision": "8fb6d5f37e8055ce720bd0b1d56587f88c0071f285966ba17e72b2b12672aa73",
+  "seq": 120457,
+  "purpose": "TRACK",
+  "t_created_ns": "1795432800141656789",
+  "t_source_ns": "1795432800123456789",
+  "t_place_ns": "1795432800145656789",
+  "t_valid_until_ns": "1795432800157656789",
+  "position": {"x": 298.4, "y": 305.1, "z": 352.7},
+  "velocity": {"vx": -812.0, "vy": 36.5, "vz": 95.2},
+  "acceleration": {"ax": 1650.0, "ay": -12.0, "az": -410.0},
+  "arm_epoch": 7,
+  "laser_on": true
+}
+```
+
+**`GalvoStatus` example**
+
+```json
+{
+  "type": "GalvoStatus",
+  "schema_version": 1,
+  "session_id": "0d1e2f30415263748596a7b8c9dae0f1",
+  "setup_revision": "8fb6d5f37e8055ce720bd0b1d56587f88c0071f285966ba17e72b2b12672aa73",
+  "seq": 88310,
+  "applied_target_seq": 120457,
+  "t_applied_ns": "1795432800145656789",
+  "laser_on": true,
+  "laser_off_reason": null,
+  "kill_switch_pressed": false,
+  "t_laser_change_ns": "1795432758250456789",
+  "synced": true,
+  "clock_offset_ns": "18730"
+}
+```
+
+**`MonitorMessage` example** (kind `status`)
+
+```json
+{
+  "type": "MonitorMessage",
+  "schema_version": 1,
+  "node": "control",
+  "t_ns": "1795432800153456789",
+  "kind": "status",
+  "payload": {
+    "mode": "TRACKING",
+    "cameras_present": 3,
+    "aiming_error_mm": 3.8,
+    "hit_rate": 0.97,
+    "clock_offset_ns": "0",
+    "cpu_percent": 61.5,
+    "ram_mb": 212
+  }
+}
+```
+
+**`MonitorMessage` example** (kind `image`; `jpeg_b64` shortened — a 320 × 240 JPEG is ≤ 30 kB, ≤ 40 kB as base64)
+
+```json
+{
+  "type": "MonitorMessage",
+  "schema_version": 1,
+  "node": "camera1",
+  "t_ns": "1795432800133256789",
+  "kind": "image",
+  "payload": {
+    "t_exposure_ns": "1795432800123456789",
+    "width": 320,
+    "height": 240,
+    "jpeg_b64": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8U…",
+    "overlay": {
+      "ball": {"u": 156.2, "v": 114.5, "radius_px": 10.9},
+      "spot": {"u": 157.1, "v": 113.3}
+    }
+  }
+}
+```
+
 
 Owner (role): Sensor and actuator modules delivers settings, driver binding, calibration and schema-valid observations; System design checks time/validity integration; Integration support supplies measured marker corners and replay.
 

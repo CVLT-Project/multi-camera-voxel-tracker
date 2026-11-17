@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 32
+revision: 34
 created: 2026-11-02T15:27
-updated: 2026-11-17T17:05
+updated: 2026-11-17T18:30
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -36,7 +36,7 @@ register: —
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 26 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | in_progress | 28 | 2026-11-02T16:03 | | |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -93,6 +93,9 @@ register: —
 | 2026-11-17 14:10 | VLT | concept | wip_commit | user request: commit concept rev 25 (architecture + consistency review, Gate 2 pending) as work in progress for team review — exception to RULES §6 as before Gate 1 |
 | 2026-11-17 17:00 | VLT | concept | sponsor decisions | transaction review against [L] (concept rev 26, approved incl. requirement wording): T1 from the physical change, p99 ≤ 45 ms (NF-VLT-18), free-running cameras ≥ 80 fps, no phase-lock, constant-acceleration prediction mandatory; transactions only T1/T3/T6/T8, the rest fault reactions or mode activities, monitoring no transaction (NF-VLT-26/29, F-VLT-10/17/34/42, NF-VLT-23/30); §11.2 complete chains with WCET per stage; design fixes A-7/A-8; ADR-VLT-008/011/018/019/021 amended; CONTEXT rev 21 |
 | 2026-11-17 17:05 | VLT | concept | wip_commit | user request: commit concept rev 26 as work in progress |
+| 2026-11-17 18:00 | VLT | concept | design detail | user request: MonitorMessage images base64-encoded in JSON (`jpeg_b64`, ≤ 40 kB encoded); network budget updated; concept rev 27 |
+| 2026-11-17 18:30 | VLT | concept | design detail | user request: §11.1 states that all node messages are JSON and gives one JSON example per message (shown in the M3 report under each field table); `type` field in every message; `setup_revision` = full SHA-256 as in the schema; concept rev 28 |
+| 2026-11-17 18:40 | VLT | concept | wip_commit | user request: commit concept rev 28 and the M3 report, push and merge into main |
 
 ## Open items for the Director
 
