@@ -1,6 +1,6 @@
 # ADR-VLT-022 — Combined error budget and camera-team verification package
 
-- **Status:** proposed · 2026-11-12 · M3 groundwork from the camera-team review; decided as a team in the M3 consistency review (Gate 2). Verification plan only; no recordings, annotations or measurements exist yet.
+- **Status:** accepted · 2026-11-19 · decided by the team at Gate 2 (M3 consistency review, OQ-14 resolved with it); proposed 2026-11-12 as M3 groundwork from the camera-team review. Requirement change applied in concept rev 32 (F-VLT-3/4, new NF-VLT-35). Verification plan only; no recordings, annotations or measurements exist yet.
 - **Feature:** VLT
 - **Would resolve (if accepted):** OQ-14 budget/test-method choices and reference-data responsibilities.
 - **Detailed fixtures:** ../VLT/camera-reference-plan.json

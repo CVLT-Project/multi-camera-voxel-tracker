@@ -1,6 +1,6 @@
 # ADR-VLT-020 — Camera acquisition, exposure, calibration and data handoff
 
-- **Status:** proposed · 2026-11-12 · M3 groundwork from the camera-team review; decided as a team in the M3 consistency review (Gate 2). Raspberry Pi 3 stays fixed; the camera model is not selected; Pi 3 feasibility at 80–120 fps with detection and JSON output is unverified.
+- **Status:** accepted · 2026-11-19 · decided by the team at Gate 2 (M3 consistency review); proposed 2026-11-12 as M3 groundwork from the camera-team review. Its requirement change request was approved and applied in concept rev 32 (F-VLT-12/31, new F-VLT-43/44). Raspberry Pi 3 stays fixed; the camera is given since 2026-11-12 (Camera Module v2.1, IMX219). Pi 3 feasibility at 80–120 fps with detection and JSON output and the field of view of the fast mode are unverified (finding A-5, bench check S2).
 - **Feature:** VLT
 - **Would resolve (if accepted):** design choices in OQ-1/OQ-7/OQ-13, except camera model; amends ADR-VLT-001/012/016.
 - **Machine-readable baseline:** ../VLT/camera-profile.json

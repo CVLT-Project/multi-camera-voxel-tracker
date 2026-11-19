@@ -1,6 +1,6 @@
 # ADR-VLT-016 — Reference installation and normal room lighting
 
-- **Status:** proposed · 2026-11-12 · M3 groundwork from the camera-team review; decided as a team in the M3 consistency review (Gate 2). Construction and measurements pending.
+- **Status:** accepted · 2026-11-19 · decided by the team at Gate 2 (M3 consistency review; OQ-3 and OQ-7 resolved with it); proposed 2026-11-12 as M3 groundwork from the camera-team review. Construction and measurements pending.
 - **Feature:** VLT
 - **Would resolve (if accepted):** OQ-3, OQ-7 (colour/background choice). The operating envelope (release 100 … 300 mm, ≤ 1000 mm/s, ≤ 4000 mm/s², ordinary room lighting) is no longer part of this proposal: it is a requirement in NF-VLT-1 since 2026-11-12, and the values below match it. Camera model/driver binding and optical/timing verification remain pending; numerical settings and error budget are selected by ADR-VLT-020/021/022.
 
