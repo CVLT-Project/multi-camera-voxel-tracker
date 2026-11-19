@@ -6,6 +6,7 @@
 | M3 — architecture, transactions, integration tests, Gate 2 | `output/pdf/DRS_M3_Voxel_Camera_with_Laser_Tracking.pdf` | `build_m3_report.py` (state of Gate 2 in `GATE2_STATE`) |
 | M3 — integration test debugging concept | `output/pdf/DRS_M3_Voxel_Camera_with_Laser_Tracking_Debugging.pdf` | `build_m3_debug_report.py` (separate file by team decision; reads the debugging section of the concept) |
 | M3 — team contracts (camera, control, laser team) | `output/pdf/DRS_M3_Voxel_Camera_with_Laser_Tracking_Contract_<Team>.pdf` | `build_m3_contracts.py` (one PDF per team from the team contracts in the architecture; copies in module specifications, messages, stage budgets, requirements and increments) |
+| Class presentation — requirements and system design (2 × 7 slides, 16:9) | `output/pdf/Slides_Requirements_<team>.pdf`, `output/pdf/Slides_System_Design_<team>.pdf` | `build_class_slides.py` (hand-picked summary; uses the system font Noto Sans, embedded in the PDF) |
 
 The first M2 version (6 November 2026) was removed from the repository on 12 November 2026 to avoid confusion with the current report; it remains in the Git history (commit `172288b`, `planning/build/reports/reference/DRS_M2_Vocel_camera_2026-11-06.pdf`).
 
