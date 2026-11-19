@@ -1,0 +1,12 @@
+[package]
+name = "laser-node"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alsa = "0.12"
+libc = "0.2"
+rppal = "0.22"
+
+[profile.release]
+lto = true

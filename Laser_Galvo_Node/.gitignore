@@ -1,0 +1,27 @@
+# Rust / Cargo build artifacts
+/target/
+**/*.rs.bk
+
+# Cargo.lock is intentionally NOT ignored: this is an application, and a pinned
+# dependency graph makes the Pi build reproducible.
+
+# Test / bench leftovers
+*.raw
+*.log
+/laser-test.sock
+
+# Local overrides (device names, socket paths, ...); the real defaults live in src/main.rs
+.env
+.env.local
+/config.local.toml
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS noise
+.DS_Store
+Thumbs.db
+__pycache__/
