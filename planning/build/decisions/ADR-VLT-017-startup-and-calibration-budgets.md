@@ -1,6 +1,6 @@
 # ADR-VLT-017 — Separate startup preparation and galvo calibration budgets
 
-- **Status:** proposed · 2026-11-12 · M3 groundwork from the camera-team review; decided as a team in the M3 consistency review (Gate 2). Changes approved requirements, so it needs a change request after Gate 1 (§11 *Requirement change requests*).
+- **Status:** accepted · 2026-11-19 · decided by the team at Gate 2 (M3 consistency review); proposed 2026-11-12 as M3 groundwork from the camera-team review. Its requirement change request was approved with it and applied in concept rev 32 (F-VLT-8/13/28/41).
 - **Feature:** VLT
 - **Proposes changes to:** F-VLT-8/13/28/31/41 (change request after Gate 1), ADR-VLT-012/013
 

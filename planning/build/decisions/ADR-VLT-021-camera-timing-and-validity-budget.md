@@ -1,6 +1,6 @@
 # ADR-VLT-021 — Numeric camera-chain timing and validity profile
 
-- **Status:** proposed · 2026-11-12 · M3 groundwork from the camera-team review; decided as a team in the M3 consistency review (Gate 2). Measured feasibility on Pi 3 and the selected camera pending.
+- **Status:** accepted · 2026-11-19 · decided by the team at Gate 2 (M3 consistency review, OQ-12 resolved with it; values as amended 2026-11-17); proposed 2026-11-12 as M3 groundwork from the camera-team review. Requirement change applied in concept rev 32 (F-VLT-22). Measured feasibility on Pi 3 and the given camera pending.
 - **Feature:** VLT
 - **Would resolve (if accepted):** OQ-12 design values; hardware timestamp adapter qualification follows OQ-1.
 - **Source of numeric values:** ../VLT/camera-profile.json

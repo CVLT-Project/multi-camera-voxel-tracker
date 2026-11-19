@@ -23,8 +23,8 @@ import build_m2_report as m2  # noqa: E402  (shared Typst helpers)
 
 TEAM = m2.TEAM
 MILESTONE = "M3"
-REPORT_DATE = "17 November 2026"
-GATE2_STATE = "pending"  # "pending" or the date of the team's approval, e.g. "20 November 2026"
+REPORT_DATE = "19 November 2026"
+GATE2_STATE = "19 November 2026"  # "pending" or the date of the team's approval, e.g. "20 November 2026"
 
 HERE = pathlib.Path(__file__).resolve().parent
 BUILD = HERE.parent
@@ -61,7 +61,12 @@ def clean(s: str) -> str:
     s = s.replace("§10", "the message specification")
     s = s.replace("the schema files are updated", "the machine-readable schemas are updated")
     s = re.sub(r"\s*\((?:11\.\d)\)", "", s)
-    s = s.replace("§11.2", "the transaction tables").replace("§11", "the architecture")
+    for ref, name in (("§11.1", "the message specification"), ("§11.2", "the transaction tables"),
+                      ("§11.3", "the global time"), ("§11.4", "the integration tests"),
+                      ("§11.5", "the reference installation"), ("§11.6", "the open bench checks"),
+                      ("§11.7", "the debugging concept"), ("§11.8", "the team contracts")):
+        s = s.replace(ref, name)
+    s = s.replace("§11", "the architecture")
     s = re.sub(r"§\s?\d+(?:\.\d+)?", "", s)
     s = re.sub(r"\(\s*\)", "", s)
     s = re.sub(r"\(was U-VLT-\d+\)\s*", "", s)
@@ -135,6 +140,30 @@ def example_block(text: str, name: str) -> str:
     return s
 
 
+def monitor_kinds(text: str):
+    """(kinds table rows, [(kind, sender, rows)]) from the MonitorMessage kinds and payloads."""
+    sec = section(text, "#### MonitorMessage kinds and payloads")
+    kinds = table_rows(sec.split("**Payload", 1)[0])
+    payloads = []
+    for m in re.finditer(r"^\*\*Payload `(\w+)` — ([^*]+)\*\*\n\n((?:\|.*\n?)+)", sec, re.M):
+        payloads.append((m.group(1), m.group(2).strip(), table_rows(m.group(3))))
+    return kinds, payloads
+
+
+def monitor_block(text: str, senders=None) -> str:
+    """Kinds table and the payload tables (only those of `senders` if given)."""
+    kinds, payloads = monitor_kinds(text)
+    status = first_para(section(text, "#### MonitorMessage kinds and payloads")).strip("_")
+    s = "\n" + md(clean(status)) + "\n\n"
+    s += tbl("(24mm, 24mm, 30mm, 1fr)", ["Kind", "Sent by", "When / rate", "Used for"], kinds)
+    for kind, who, rows in payloads:
+        if senders and not any(x in who for x in senders):
+            continue
+        s += "\n" + md(f"**Payload:** `{kind}` — {who}") + "\n\n"
+        s += tbl("(38mm, 30mm, 1fr)", ["Field", "Type", "Meaning"], rows)
+    return s
+
+
 NODE_OF = {"camera": "camera nodes", "control": "control node", "galvo": "galvo node",
            "monitor": "monitoring laptop", "common": "all nodes", "sim": "test tools", "deploy": "all nodes"}
 
@@ -159,7 +188,7 @@ def trace_matrix(text: str):
 # requirement → transaction, fault reaction or mode activity (from the transaction tables)
 TX = {
     "T1": "F-VLT-1 F-VLT-2 F-VLT-3 F-VLT-4 F-VLT-5 F-VLT-6 F-VLT-7 F-VLT-9 F-VLT-22 F-VLT-23 F-VLT-27 "
-          "F-VLT-39 NF-VLT-1 NF-VLT-5 NF-VLT-17 NF-VLT-18 NF-VLT-24 NF-VLT-27 NF-VLT-32 NF-VLT-33",
+          "F-VLT-39 F-VLT-43 NF-VLT-1 NF-VLT-5 NF-VLT-17 NF-VLT-18 NF-VLT-24 NF-VLT-27 NF-VLT-32 NF-VLT-33 NF-VLT-35",
     "T3": "F-VLT-8 F-VLT-11 F-VLT-16 F-VLT-26",
     "T6": "F-VLT-26",
     "T8": "F-VLT-30 F-VLT-35 NF-VLT-3",
@@ -168,7 +197,7 @@ TX = {
     "fault reaction: galvo hang": "NF-VLT-30",
     "fault reaction: no measurable spot": "F-VLT-42",
     "fault reaction: camera data loss": "F-VLT-11 F-VLT-20 F-VLT-22",
-    "mode activity: camera reintegration": "F-VLT-12 F-VLT-17 F-VLT-28",
+    "mode activity: camera reintegration": "F-VLT-12 F-VLT-17 F-VLT-28 F-VLT-44",
     "mode activity: arming check": "F-VLT-31 F-VLT-24 F-VLT-35 F-VLT-41",
     "mode activity: galvo scan": "F-VLT-13 F-VLT-19",
     "all transactions": "NF-VLT-9 NF-VLT-19 NF-VLT-20 NF-VLT-26 NF-VLT-29",
@@ -185,6 +214,19 @@ IT = {
     "F-VLT-35": [11, 12], "F-VLT-31": [12], "F-VLT-24": [12], "F-VLT-13": [13], "F-VLT-41": [11, 12, 13],
     "NF-VLT-26": list(range(1, 14)), "NF-VLT-29": [1, 4, 6, 7, 8, 9, 10, 11], "NF-VLT-23": list(range(2, 12)),
     "NF-VLT-34": list(range(2, 14)), "NF-VLT-9": [1], "NF-VLT-20": [3],
+    "F-VLT-43": [1], "F-VLT-44": [2, 5], "NF-VLT-35": [1],
+}
+
+
+# message fields the design adds to the message specification (finding A-4)
+EXTRA_FIELDS = {
+    "Observation": [["`profile_id`, `calibration_id`", "string", "camera profile and validated calibration the frame was measured with"],
+                    ["`t_ball_sample_ns`, `t_spot_sample_ns`", "int64 or null", "sample time of ball and spot from their image row (rolling shutter)"],
+                    ["`exposure_us`, `analogue_gain`", "uint32, float32", "locked exposure settings"],
+                    ["`t_readout_ns`, `t_detected_ns`, `t_sent_ns`", "int64", "stage timestamps for the chain statistics (F-VLT-39)"]],
+    "Target": [["`t_created_ns`", "int64", "creation time at the control node; transport age ≤ 5 ms"],
+               ["`purpose`", "enum", "TRACK, SCAN (galvo scan), CHECK (arming check) or IDLE (laser off)"]],
+    "GalvoStatus": [["`synced`, `clock_offset_ns`", "bool, int64", "the galvo node's sync state (F-VLT-20)"]],
 }
 
 
@@ -304,7 +346,7 @@ def build() -> str:
 #v(25mm)
 #block(width: 100%, inset: 8pt, stroke: 0.8pt)[{gate_box}]
 #v(1fr)
-#text(size: 8.5pt, fill: luma(70))[{esc(m2.LECTURE)} Requirement IDs (F-VLT-n, NF-VLT-n) refer to the requirements approved at Gate 1 (milestone M2) and amended by the transaction review of 17 November 2026; decision IDs are ADR-VLT-n. Owners are sub-team roles: camera team, control team, laser team.]
+#text(size: 8.5pt, fill: luma(70))[{esc(m2.LECTURE)} Requirement IDs (F-VLT-n, NF-VLT-n) refer to the requirements approved at Gate 1 (milestone M2) and amended by the transaction review of 17 November 2026 and by the change requests approved at Gate 2 on 19 November 2026; decision IDs are ADR-VLT-n. Owners are sub-team roles: camera team, control team, laser team.]
 #pagebreak()
 #outline(depth: 2, indent: auto)
 #pagebreak()
@@ -359,7 +401,9 @@ def build() -> str:
         amended = "amended 17 Nov 2026" if "## Amendment" in t else ""
         adr_rows.append([ident, name, status + (", " + amended if amended else "")])
     a("\n== Architecture decisions\n")
-    a(md("Decisions the architecture rests on. \"Proposed\" decisions are decided by the team at Gate 2 (Section 8).") + "\n\n")
+    a(md("Decisions the architecture rests on. \"Proposed\" decisions are decided by the team at Gate 2 (Section 8)."
+         if GATE2_STATE == "pending" else
+         f"Decisions the architecture rests on; the team accepted the camera-team decisions at Gate 2 on {GATE2_STATE}.") + "\n\n")
     a(tbl("(23mm, 1fr, 40mm)", ["ID", "Decision", "State"], adr_rows))
 
     # 2 transactions
@@ -398,7 +442,7 @@ def build() -> str:
 
     # 3 global time
     a("\n= Global time\n")
-    gt = section(text, "### 11.3 Global time (proposed)")
+    gt = section(text, "### 11.3 Global time")
     a("\n".join("- " + md(clean(x)) for x in re.findall(r"^- (.+)$", gt, re.M)) + "\n")
     a("- " + md("**Synchronization.** Software PTP (IEEE 1588 over UDP, kernel software timestamping, ADR-VLT-002); "
                 "the control node is the grandmaster. Each node polls its offset every 20 ms; a node counts as synchronized "
@@ -411,7 +455,7 @@ def build() -> str:
 
     # 4 interfaces and messages
     a("\n= Interfaces and messages\n")
-    i11 = table_rows(section(text, "### 11.1 Interfaces and messages — camera handoff (proposed, ADR-VLT-020)"))
+    i11 = table_rows(section(text, "### 11.1 Interfaces and messages — camera handoff (ADR-VLT-020)"))
     a("== Transport and message rules\n")
     a(md("All messages between the nodes (camera, control, galvo, monitoring) are JSON: one UTF-8 JSON object per UDP "
          "datagram. The only non-JSON traffic between the nodes is the PTP time synchronisation (F-VLT-23).") + "\n\n")
@@ -422,22 +466,15 @@ def build() -> str:
          "sender session order or setup does not match (F-VLT-23, F-VLT-24). Of these, a MonitorMessage carries only `type` and "
          "`schema_version`.") + "\n\n")
     a(tbl("(32mm, 18mm, 1fr)", ["Field", "Type", "Meaning"], env))
-    extra = {
-        "Observation": [["`profile_id`, `calibration_id`", "string", "camera profile and validated calibration the frame was measured with"],
-                        ["`t_ball_sample_ns`, `t_spot_sample_ns`", "int64 or null", "sample time of ball and spot from their image row (rolling shutter)"],
-                        ["`exposure_us`, `analogue_gain`", "uint32, float32", "locked exposure settings"],
-                        ["`t_readout_ns`, `t_detected_ns`, `t_sent_ns`", "int64", "stage timestamps for the chain statistics (F-VLT-39)"]],
-        "Target": [["`t_created_ns`", "int64", "creation time at the control node; transport age ≤ 5 ms"],
-                   ["`purpose`", "enum", "TRACK, SCAN (galvo scan), CHECK (arming check) or IDLE (laser off)"]],
-        "GalvoStatus": [["`synced`, `clock_offset_ns`", "bool, int64", "the galvo node's sync state (F-VLT-20)"]],
-    }
     for name, direction in (("Observation", "camera node → control node, UDP, one per frame"),
                             ("Target", "control node → galvo node, UDP, one per fusion step (10 ms), in every mode"),
                             ("GalvoStatus", "galvo node → control node, UDP, with each newly applied target and at least every 50 ms"),
                             ("MonitorMessage", "every node → monitoring laptop, UDP, best effort; events at once, status ≤ 20 Hz, images ≤ 5/s, diagnostics summary every 1 s")):
         a(f"\n== {name}\n")
         a(md(direction) + "\n\n")
-        a(tbl("(38mm, 26mm, 1fr)", ["Field", "Type", "Range / meaning"], message_fields(text, name) + extra.get(name, [])))
+        a(tbl("(38mm, 26mm, 1fr)", ["Field", "Type", "Range / meaning"], message_fields(text, name) + EXTRA_FIELDS.get(name, [])))
+        if name == "MonitorMessage":
+            a(monitor_block(text))
         a(example_block(text, name))
     a("\n== CameraCalibration\n")
     a(md("camera node → control node, UDP state message every 500 ms: camera, session, profile, setup and calibration "
@@ -473,7 +510,7 @@ def build() -> str:
 
     # 6 traceability
     a("\n= Traceability\n")
-    a(md("Every requirement of Gate 1 with the transaction (or fault reaction, mode activity) that carries it, the "
+    a(md("Every requirement (approved at Gate 1, amended at Gate 2) with the transaction (or fault reaction, mode activity) that carries it, the "
          "nodes that implement it, and the test that checks it. IT-n are the integration tests of Section 5; "
          "\"acceptance Sn\" is the requirement's own acceptance criterion, checked when build increment Sn is "
          "finished.") + "\n\n")
@@ -502,25 +539,25 @@ def build() -> str:
          else "Each finding with the status decided at Gate 2.") + "\n\n")
     findings = [
         ["A-1", "Target expiry of one ms after placement left the galvo without a valid target for 9 of every 10 ms (F-VLT-5, F-VLT-22, NF-VLT-18).",
-         "fixed", "Expiry = min(t_place + fusion period + g, oldest source + 45 ms); prediction horizon ≤ 45 ms."],
+         "accepted", "Expiry = min(t_place + fusion period + g, oldest source + 45 ms); prediction horizon ≤ 45 ms; prediction error at 45 ms shown in S1."],
         ["A-2", "The on-chip watchdog backstop for a galvo hang has no reserve: its minimum timeout of 1 s equals the deadline (NF-VLT-30).",
          "accepted", "The laser guard switches the laser off ≈ 29 ms after an output-loop stall; the watchdog only covers a stall of the laser guard or the kernel."],
         ["A-3", "The laser switch-off delay (supply switch and laser decay) is not measured; it sets the 8 ms output stage and F-VLT-16's action-delay window. Target loss has only 0.5 ms slack.",
-         "deferred", "Estimated from the datasheets of the supply switch and the laser module (default 8 ms); there is no optical measurement."],
+         "accepted", "Estimated from the datasheets of the supply switch and the laser module (default 8 ms); there is no optical measurement."],
         ["A-4", "Message fields needed by the design were missing (stage timestamps, purpose, session, setup, sync state) (F-VLT-23, F-VLT-24, F-VLT-39).",
-         "fixed", "Added to the message specification (Section 4)."],
+         "accepted", "Added to the message specification (Section 4); the machine-readable schema is updated before S1."],
         ["A-5", "No camera mode is confirmed that gives both the field of view of the layout and ≥ 80 fps (risk R-1, NF-VLT-18, NF-VLT-32).",
-         "deferred", "Bench measurement in S2; the T1 input stage is unverified until then."],
+         "open", "Bench measurement in S2; the T1 input stage is unverified until then, and S2 is accepted only with the measurement."],
         ["A-6", "Python timing of camera detection (4 ms) and the galvo output blocks is unverified (risk R-2, NF-VLT-18, NF-VLT-19).",
-         "deferred", "Bench measurement in S2 and S3; levers: region of interest, frame rate, larger output buffer."],
+         "open", "Bench measurement in S2 and S3; levers: region of interest, frame rate, larger output buffer."],
         ["A-7", "A laptop that connects late could not show the diagnostics since node start (F-VLT-40).",
          "fixed", "Every node resends a bounded diagnostics summary every 1 s."],
         ["A-8", "The overlay in the camera images lagged by up to ≈ 35 mm of ball motion (F-VLT-38).",
          "fixed", "The monitoring server draws the control state closest to each image's exposure time."],
         ["CR", "Requirement change requests from the camera-team groundwork (ADR-VLT-017 start-up budgets; ADR-VLT-020 camera profile; ADR-VLT-021 validity limits; ADR-VLT-022 error budget).",
-         "deferred", "Not needed for the design; decided by the team after the bench measurements."],
+         "approved", "Applied to the requirements: F-VLT-3, F-VLT-4, F-VLT-8, F-VLT-12, F-VLT-13, F-VLT-22, F-VLT-28, F-VLT-31, F-VLT-41 changed; F-VLT-43 (camera acquisition), F-VLT-44 (calibration handoff), NF-VLT-35 (combined error budget) new (Section 8)."],
         ["OQ", "Open questions OQ-3 (cube 800 mm), OQ-4 (galvo facts), OQ-7 (white ball, grey background), OQ-12 (validity limits), OQ-14 (error budget).",
-         "accepted", "The architecture uses their proposals; OQ-4 values are confirmed on the bench in S3."],
+         "accepted", "Proposals accepted and the questions closed; OQ-4 values are confirmed on the bench in S3."],
     ]
     a(tbl("(10mm, 1.4fr, 16mm, 1.2fr)", ["ID", "Finding", "Proposed status" if GATE2_STATE == "pending" else "Status", "Action / reason"], findings))
 
@@ -533,7 +570,25 @@ def build() -> str:
              "Milestone M3 is reached when this report and the report \"Mx – Integration Test Debugging Concept\" are "
              "both accepted.") + "\n")
     else:
-        a(md(f"The consistency review is done and the team approved the design on {GATE2_STATE}.") + "\n")
+        a(md(f"The consistency review is done and the team approved the design on {GATE2_STATE}, with the statuses of "
+             "Section 7.1: A-1 to A-4 accepted as proposed; A-5 (camera mode, risk R-1) and A-6 (Python timing, risk R-2) "
+             "stay open until the bench measurements of build increments S2 and S3; open questions OQ-3, OQ-4, OQ-7, OQ-12 "
+             "and OQ-14 closed with their proposals; the camera-team decisions ADR-VLT-016 to ADR-VLT-022 accepted.") + "\n\n")
+        a(md("The team also approved the requirement change requests of the camera-team groundwork. They change "
+             "requirements approved at Gate 1:") + "\n\n")
+        changed = ["F-VLT-3", "F-VLT-4", "F-VLT-8", "F-VLT-12", "F-VLT-13", "F-VLT-22", "F-VLT-28", "F-VLT-31", "F-VLT-41"]
+        new = ["F-VLT-43", "F-VLT-44", "NF-VLT-35"]
+        cr_note = {
+            "F-VLT-3": "two cameras: 15 mm → 10 mm", "F-VLT-4": "10 mm median / 20 mm p95 → 8 mm p99",
+            "F-VLT-8": "no emission at boot and in Start", "F-VLT-12": "≥ 4 markers on ≥ 2 planes, ≤ 5 s exposure settling, pose check ≥ every 1 s",
+            "F-VLT-13": "≤ 60 s per scan attempt incl. laser off and transition", "F-VLT-22": "numeric validity limits",
+            "F-VLT-28": "separate budgets: Start ≤ 60 s, each scan attempt ≤ 60 s", "F-VLT-31": "each check point within 250 ms",
+            "F-VLT-41": "Start defined as laser-off preparation", "F-VLT-43": "new", "F-VLT-44": "new", "NF-VLT-35": "new",
+        }
+        a(tbl("(24mm, 34mm, 1fr)", ["Requirement", "Change", "Requirement text (as approved at Gate 2)"],
+              [[rid, cr_note[rid], req_text[rid]] for rid in changed + new]))
+        a("\n" + md("Milestone M3 is reached when this report and the report \"Mx – Integration Test Debugging Concept\" "
+                    "are both accepted.") + "\n")
     return "".join(p)
 
 
@@ -545,7 +600,7 @@ def main() -> int:
     typ.write_text(build(), encoding="utf-8")
     pdf = OUT_DIR / f"{STEM}.pdf"
     res = subprocess.run(["typst", "compile", "--ignore-system-fonts",
-                          "--creation-timestamp", "1794873600", str(typ), str(pdf)])
+                          "--creation-timestamp", "1795046400", str(typ), str(pdf)])
     if res.returncode == 0:
         typ.unlink()
         svg.unlink()

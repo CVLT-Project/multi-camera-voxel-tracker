@@ -2,9 +2,9 @@
 stage: control
 owner: build
 status: in_progress
-revision: 37
+revision: 41
 created: 2026-11-02T15:27
-updated: 2026-11-17T21:00
+updated: 2026-11-19T12:30
 input: problem statement (chat)
 title: Voxel Camera with Laser Tracking
 code_root: ../../src
@@ -29,14 +29,14 @@ register: —
 
 | Code | Title | Path | Field of application | Concept version | Status |
 | --- | --- | --- | --- | --- | --- |
-| VLT | Voxel Camera with Laser Tracking | A | distributed real-time system (+ embedded, hardware) | — | in_progress |
+| VLT | Voxel Camera with Laser Tracking | A | distributed real-time system (+ embedded, hardware) | 0.1 | in_progress |
 
 ## Feature VLT — Voxel Camera with Laser Tracking
 
 | Stage | Skill | File | Status | Current revision | Started | Finished | Minutes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | intake | VLT/10-intake.md | done | 2 | 2026-11-02T15:28 | 2026-11-02T16:03 | 31 |
-| 2 | concept | VLT/20-concept.md | in_progress | 31 | 2026-11-02T16:03 | | |
+| 2 | concept | VLT/20-concept.md | done | 35 | 2026-11-02T16:03 | 2026-11-19T12:30 | many sessions (see Open items) |
 | 3 | synthesis | VLT/30-synthesis.md | open | — | | | |
 | 4 | rescue | VLT/40-rescue.md | open | — | | | on demand |
 
@@ -45,7 +45,7 @@ register: —
 | Gate | MANIFEST | When | Decision | By | Date | Rationale / accepted items |
 | --- | --- | --- | --- | --- | --- | --- |
 | PM review | Phase 4 | after concept §3–§10, before architecture | approved | Ralf Hintersteininger (sponsor), with the team | 2026-11-12 | requirements of concept rev 22 approved as written (Gate 1), incl. all requirements marked "proposed — PM review pending" / "Gate 1 pending". Accepted as open into the architecture (decided at Gate 2): OQ-3, OQ-4, OQ-7, OQ-12, OQ-14 (each with a proposal) and risk R-1 (camera mode vs. NF-VLT-18). Not part of this approval: the requirement change requests in §11 (ADR-VLT-017/020/021/022) — each needs its own team decision |
-| Consistency review | Phase 6 | after architecture, before synthesis | pending | | | |
+| Consistency review | Phase 6 | after architecture, before synthesis | approved | Ralf Hintersteininger (sponsor), with the team | 2026-11-19 | architecture of concept rev 31 approved. A-1, A-2, A-3 (switch-off delay 8 ms from datasheets), A-4 (schema fields before S1) accepted as proposed; A-5 (R-1) and A-6 (R-2) deferred as tracked open items, settled by the S2/S3 bench checks; OQ-3/4/7/12/14 resolved with their proposals; requirement change requests ADR-VLT-017/020/021/022 approved and applied in concept rev 32 (F-VLT-3/4/8/12/13/22/28/31/41 changed; F-VLT-43, F-VLT-44, NF-VLT-35 new); ADR-VLT-016 … 022 accepted |
 | Gap analysis | Phase 9 | after the last slice | pending | | | |
 
 ## Cross-feature interactions
@@ -100,12 +100,18 @@ register: —
 | 2026-11-17 20:30 | VLT | concept | user decision | LED blinker and photodiode removed from the debugging bench (§11.7): wiring profiles carry laser enable, kill switch and trace pins only; input stage and physical output not measured independently; §11.2/§11.4/§11.6 still name them (open); concept rev 30 |
 | 2026-11-17 21:00 | VLT | concept | user decision | LED and photodiode removed everywhere (requirement wording approved): NF-VLT-29 example, acceptance of F-VLT-42, NF-VLT-5/16/18/25/30, §11.2 check column, §11.4 measurements, S2/S3 acceptance, FrameSource row time; switch-off delay estimated from datasheets (A-3 open); concept rev 31 |
 | 2026-11-17 21:15 | VLT | concept | wip_commit | user request: commit concept rev 31, ADR-VLT-024 and both M3 reports (architecture, debugging concept), push and merge into main |
+| 2026-11-19 10:20 | VLT | concept | Gate 2 approved | consistency review (MANIFEST Phase 6) passed; decisions as in the Gates table. Concept rev 32 applies them (requirement wording shown to and approved by the user); M3 report regenerated with Gate 2 approved (19 November 2026) and the changed requirements |
+| 2026-11-19 11:30 | VLT | concept | user request | team contracts (concept rev 33, §11.8): every module owned by one team; `common/` split by main user (camera_model → camera team; galvo_model, trace_pin → laser team; rest → control team); message changes reviewed by all three teams; requirements without a module assigned; `deploy/` owner still to be named before S8. One PDF per team generated (`reports/build_m3_contracts.py`) |
+| 2026-11-19 12:15 | VLT | concept | user request | MonitorMessage completed (concept rev 34, §11.1): kinds `status`, `health`, `diagnostics`, `event`, `image`, `run_result`, `slot`, `target_record` plus the mirror stream, sender and rate per kind, payload table per kind and node, JSON examples; envelope adds `session_id`, `monitor_seq`; `alarm` → event; *Monitoring* row per team contract. Proposed — review of all three teams pending. M3 report and contracts regenerated; report generator now names §11.x subsections instead of printing "the architecture.N" |
+| 2026-11-19 12:30 | VLT | concept | next (done) | user: "fix it to 45 ms and commit" — §11.2 source-to-use limit corrected to 45 ms; concept rev 35 set `done`; committed with ADRs, reports and contracts (`build(VLT): concept done`); synthesis next |
 
 ## Open items for the Director
 
-- Architecture and consistency review written (concept rev 24, simulators reorganised in rev 25, transactions rebuilt in rev 26). **Gate 2 (consistency review) pending:** findings A-1 … A-6, the §11 change requests, OQ-3/4/7/12/14; bench checks R-1/R-2 and the laser switch-off delay feed A-3/A-5/A-6.
-- Before or with Gate 2: team decisions on the §11 requirement change requests (ADR-VLT-017/020/021/022); answers to OQ-3/4/7/12/14; bench check of R-1 (camera mode vs. NF-VLT-18 30 ms).
-- Programming language decided 2026-11-17: Python everywhere (ADR-VLT-023). Bench check R-2 (galvo output blocks, camera detection time in Python) before Gate 2, together with R-1.
+- Concept done 2026-11-19 (rev 35). Next: synthesis, starting with S1 (walking skeleton, hardware-free), S7 right after.
+- Tracked open items from Gate 2: A-5 / R-1 (camera mode: field of view vs. ≥ 80 fps, bench check in S2 — S2 accepted only with it) and A-6 / R-2 (Python timing, bench checks in S2 and S3). A failure leads to a change request (NF-VLT-18, layout or compiled kernel).
+- Review of the MonitorMessage kinds and payloads (concept rev 34, §11.1) by all three teams — proposed, needed before S7 builds the monitor against them.
+- Name the owner of `deploy/` (node image and setup scripts; NF-VLT-13, NF-VLT-28) before S8.
+- A-4: update the machine-readable schemas (`VLT/camera-observation.schema.json` and the Target/GalvoStatus fields) to the §11.1 message specification before S1.
 - Concept stage is far beyond its 120-min budget (running since 2026-11-02) — note for the retro.
 
 ## Notes (human)

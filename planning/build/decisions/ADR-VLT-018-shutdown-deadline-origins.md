@@ -1,6 +1,6 @@
 # ADR-VLT-018 — Explicit shutdown origins and qualification intervals
 
-- **Status:** proposed · 2026-11-12 · from the camera-team review (resolves the 100 ms / 600 ms ambiguity); decided with Gate 1; measured verification remains pending.
+- **Status:** accepted · 2026-11-19 · confirmed by the team at Gate 2; proposed 2026-11-12 from the camera-team review (resolves the 100 ms / 600 ms ambiguity), requirement part decided with Gate 1; measured verification remains pending.
 - **Feature:** VLT
 - **Amends:** ADR-VLT-008/010/015, NF-VLT-23/26/29/30/34
 

@@ -5,6 +5,7 @@
 | M2 — requirements and Gate 1 | `output/pdf/DRS_M2_Voxel_Camera_with_Laser_Tracking.pdf` | `build_m2_report.py` |
 | M3 — architecture, transactions, integration tests, Gate 2 | `output/pdf/DRS_M3_Voxel_Camera_with_Laser_Tracking.pdf` | `build_m3_report.py` (state of Gate 2 in `GATE2_STATE`) |
 | M3 — integration test debugging concept | `output/pdf/DRS_M3_Voxel_Camera_with_Laser_Tracking_Debugging.pdf` | `build_m3_debug_report.py` (separate file by team decision; reads the debugging section of the concept) |
+| M3 — team contracts (camera, control, laser team) | `output/pdf/DRS_M3_Voxel_Camera_with_Laser_Tracking_Contract_<Team>.pdf` | `build_m3_contracts.py` (one PDF per team from the team contracts in the architecture; copies in module specifications, messages, stage budgets, requirements and increments) |
 
 The first M2 version (6 November 2026) was removed from the repository on 12 November 2026 to avoid confusion with the current report; it remains in the Git history (commit `172288b`, `planning/build/reports/reference/DRS_M2_Vocel_camera_2026-11-06.pdf`).
 
@@ -34,3 +35,5 @@ Team name, milestone, report date and Gate 1 date are constants at the top of th
 - Gate 1: the team's approval and its date, without approver names.
 
 `build_m3_report.py` reuses the M2 helpers, takes its tables from the architecture, transaction, integration-test and consistency-review sections of the concept, and draws the architecture diagram as SVG. Set `GATE2_STATE` to the approval date once the team has approved the design.
+
+`build_m3_contracts.py` checks that every module of the module tree has exactly one owning team (except the FaultInjector, which goes to the first team that finishes its node slice) and stops otherwise. The contracts name code paths under `src/`, because they are working documents for the teams, not graded reports.

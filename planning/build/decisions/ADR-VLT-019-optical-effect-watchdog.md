@@ -1,6 +1,6 @@
 # ADR-VLT-019 — Bounded emission without a measurable optical effect
 
-- **Status:** proposed · 2026-11-12 · from the camera-team review (no defined response to an unmeasurable spot); decided with Gate 1; 500 ms is a selected policy limit, physical feasibility remains unverified.
+- **Status:** accepted · 2026-11-19 · confirmed by the team at Gate 2; proposed 2026-11-12 from the camera-team review (no defined response to an unmeasurable spot), requirement part decided with Gate 1; 500 ms is a selected policy limit, physical feasibility remains unverified.
 - **Feature:** VLT
 - **Adds:** F-VLT-42
 - **Amends:** F-VLT-8/13/21/29/31 and ADR-VLT-007/012/013/015
