@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://5u11hddmn6ra"]
+
+[ext_resource type="Script" uid="uid://b1hksfd33m77i" path="res://lasergun.gd" id="1_2yy5a"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_rxte6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_20kb0"]
+albedo_color = Color(1, 0, 1, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_rxte6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5l7cv"]
+albedo_color = Color(0.39607844, 0, 0.39607844, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2yy5a"]
+albedo_color = Color(0.3948785, 0.0001068984, 0.39487565, 1)
+
+[node name="Lasergun" type="Node3D" unique_id=107133085]
+script = ExtResource("1_2yy5a")
+
+[node name="Geometry" type="Node3D" parent="." unique_id=1452620215]
+
+[node name="Shaft" type="MeshInstance3D" parent="Geometry" unique_id=1023806453]
+transform = Transform3D(1, 0, 0, 0, -8.742278e-08, 1, 0, -2, -4.371139e-08, 0, -0.013607979, -1.9991913)
+mesh = SubResource("CapsuleMesh_rxte6")
+surface_material_override/0 = SubResource("StandardMaterial3D_20kb0")
+
+[node name="Ball 1" type="MeshInstance3D" parent="Geometry" unique_id=1584725598]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.9687916, 0, 0)
+mesh = SubResource("SphereMesh_rxte6")
+surface_material_override/0 = SubResource("StandardMaterial3D_5l7cv")
+
+[node name="Ball 2" type="MeshInstance3D" parent="Geometry" unique_id=1437234394]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0.9292517, 0, 0)
+mesh = SubResource("SphereMesh_rxte6")
+surface_material_override/0 = SubResource("StandardMaterial3D_2yy5a")

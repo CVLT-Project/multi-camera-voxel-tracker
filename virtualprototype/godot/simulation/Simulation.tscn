@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://41x5c0mlw1wp"]
+
+[ext_resource type="PackedScene" uid="uid://c7cvfcbn5mkka" path="res://Kamera.tscn" id="1_2iqi2"]
+[ext_resource type="PackedScene" uid="uid://5u11hddmn6ra" path="res://Lasergun.tscn" id="2_1gfko"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tvokg"]
+size = Vector3(60, 2, 60)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2iqi2"]
+albedo_color = Color(6.708223e-07, 0.23550847, 0.04631675, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rxte6"]
+size = Vector3(60, 2, 60)
+
+[node name="root" type="Node3D" unique_id=716395183]
+
+[node name="Floor" type="StaticBody3D" parent="." unique_id=1225695291]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=1474284316]
+shape = SubResource("BoxShape3D_tvokg")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=1961267065]
+material_override = SubResource("StandardMaterial3D_2iqi2")
+mesh = SubResource("BoxMesh_rxte6")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1189856645]
+transform = Transform3D(0.6046007, -0.47728935, 0.6376934, -0.5004178, 0.39526555, 0.7702903, -0.61970955, -0.7848312, 0.00013376393, 0, 14, 0)
+shadow_enabled = true
+
+[node name="Kamera" parent="." unique_id=853276885 instance=ExtResource("1_2iqi2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5904684, 10.161585)
+
+[node name="Kamera2" parent="." unique_id=1944298509 instance=ExtResource("1_2iqi2")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 8.707705, 5.5511904, 0)
+port = 4201
+
+[node name="Kamera3" parent="." unique_id=170063884 instance=ExtResource("1_2iqi2")]
+transform = Transform3D(-4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0, 1, 0, 14.731642, 0)
+port = 4202
+
+[node name="Lasergun" parent="." unique_id=107133085 instance=ExtResource("2_1gfko")]
+transform = Transform3D(0.00063677225, 0, -0.9999998, 0, 1, 0, 0.9999998, 0, 0.00063677225, -8.758837, 2.3546038, 0)
